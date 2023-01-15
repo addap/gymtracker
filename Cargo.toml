@@ -1,0 +1,12 @@
+[workspace]
+
+members = [
+    "gt-core",
+    "gt-frontend",
+    "gt-backend",
+    "migration",
+]
+
+exclude = [
+    "todomvc"
+]

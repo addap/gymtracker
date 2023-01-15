@@ -1,0 +1,138 @@
+use sea_orm_migration::prelude::*;
+
+#[derive(DeriveMigrationName)]
+pub struct Migration;
+
+#[async_trait::async_trait]
+impl MigrationTrait for Migration {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .create_table(
+                Table::create()
+                    .table(LoginUser::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(LoginUser::Id)
+                            .integer()
+                            .not_null()
+                            .auto_increment()
+                            .primary_key()
+                            .unique_key(),
+                    )
+                    .col(ColumnDef::new(LoginUser::Username).string().not_null())
+                    .col(ColumnDef::new(LoginUser::PwHash).string().not_null())
+                    .col(ColumnDef::new(LoginUser::CreatedAt).timestamp().not_null())
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(UserInfo::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(UserInfo::Id)
+                            .integer()
+                            .not_null()
+                            .auto_increment()
+                            .primary_key(),
+                    )
+                    .col(
+                        ColumnDef::new(UserInfo::UserId)
+                            .integer()
+                            .not_null()
+                            .unique_key(),
+                    )
+                    .col(ColumnDef::new(UserInfo::DisplayName).string().not_null())
+                    .col(ColumnDef::new(UserInfo::Photo).blob(BlobSize::Medium))
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk-userinfo-user_id")
+                            .from(UserInfo::Table, UserInfo::UserId)
+                            .to(LoginUser::Table, LoginUser::Id), // .on_delete(ForeignKeyAction::Cascade)
+                                                                  // .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(UserInfoTs::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(UserInfoTs::Id)
+                            .integer()
+                            .not_null()
+                            .auto_increment()
+                            .primary_key(),
+                    )
+                    .col(ColumnDef::new(UserInfoTs::UserId).integer().not_null())
+                    .col(ColumnDef::new(UserInfoTs::Height).float())
+                    .col(ColumnDef::new(UserInfoTs::Weight).float())
+                    .col(ColumnDef::new(UserInfoTs::MuscleMass).float())
+                    .col(ColumnDef::new(UserInfoTs::BodyFat).float())
+                    .col(ColumnDef::new(UserInfoTs::CreatedAt).timestamp().not_null())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk-userinfots-user_id")
+                            .from(UserInfoTs::Table, UserInfoTs::UserId)
+                            .to(LoginUser::Table, LoginUser::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+        Ok(())
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .drop_table(Table::drop().table(LoginUser::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(UserInfo::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(UserInfoTs::Table).to_owned())
+            .await?;
+
+        Ok(())
+    }
+}
+
+/// Learn more at https://docs.rs/sea-query#iden
+#[derive(Iden)]
+pub enum LoginUser {
+    Table,
+    Id,
+    Username,
+    PwHash,
+    CreatedAt,
+}
+
+#[derive(Iden)]
+enum UserInfo {
+    Table,
+    Id,
+    UserId,
+    DisplayName,
+    Photo,
+}
+
+#[derive(Iden)]
+enum UserInfoTs {
+    Table,
+    Id,
+    UserId,
+    Weight,
+    Height,
+    BodyFat,
+    MuscleMass,
+    CreatedAt,
+}
