@@ -1,8 +1,9 @@
 use axum::extract::{FromRequest, Json, State};
 use http::{header::AUTHORIZATION, StatusCode};
-use hyper::{Body, Error, Request, Response};
+use hyper::{Error, Request, Response};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::sync::Arc;
 use tower::{service_fn, Service, ServiceBuilder, ServiceExt};
 use tower_http::auth::{AuthorizeRequest, RequireAuthorizationLayer};
 

@@ -2,6 +2,7 @@ use axum::{
     body::HttpBody,
     extract::{Form, Path, Query, State},
     http::StatusCode,
+    middleware,
     response::{Html, Response},
     routing::{get, get_service, post},
     Router, Server,
@@ -9,12 +10,13 @@ use axum::{
 // use gt_core::{Mutation as MutationCore, Query as QueryCore};
 use migration::{Migrator, MigratorTrait};
 use sea_orm::Database;
-use std::{env, net::SocketAddr, str::FromStr};
+use std::{env, net::SocketAddr, str::FromStr, sync::Arc};
+use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
 use tower_http::auth::RequireAuthorizationLayer;
 use tower_http::services::{ServeDir, ServeFile};
 
-use gt_backend::{api, db, AppState};
+use gt_backend::{api, db, AppState, InnerAppState};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -32,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
     Migrator::up(&conn, None).await?;
     db::populate(&conn).await?;
 
-    let state = AppState { conn };
+    let state = Arc::new(InnerAppState { conn });
 
     let unauth_api_routes = Router::new().route("/user/login", post(api::user::login));
 
@@ -41,7 +43,10 @@ async fn main() -> anyhow::Result<()> {
             "/exercise/name",
             get(api::exercise::get_all_exercise_names).post(api::exercise::add_exercise_name),
         )
-        .layer(RequireAuthorizationLayer::custom(api::MyAuth));
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            api::auth_middleware,
+        ));
 
     let app = Router::new()
         .merge(frontend_routes())

@@ -2,6 +2,7 @@ use axum::{extract::State, Json};
 use sea_orm::*;
 use serde::Deserialize;
 use serde_json::{json, Value};
+use std::sync::Arc;
 
 use crate::AppState;
 use gt_core::entities::{prelude::*, *};
