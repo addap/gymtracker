@@ -8,6 +8,7 @@ pub struct UserLogin {
 
 #[derive(Deserialize, Serialize)]
 pub struct UserSignup {
+    pub display_name: String,
     pub username: String,
     pub password: String,
     pub email: String,

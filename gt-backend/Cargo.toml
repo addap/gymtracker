@@ -10,6 +10,7 @@ anyhow = "1.0.68"
 axum = { version = "0.6.2", features = [ "headers" ] }
 chrono = "0.4.23"
 dotenvy = "0.15.6"
+email_address = "0.2.4"
 futures = "0.3.25"
 gt-core = { path = "../gt-core" }
 http = "0.2.8"

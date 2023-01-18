@@ -19,8 +19,18 @@ impl MigrationTrait for Migration {
                             .primary_key()
                             .unique_key(),
                     )
-                    .col(ColumnDef::new(UserLogin::Username).string().not_null())
-                    .col(ColumnDef::new(UserLogin::Email).string().not_null())
+                    .col(
+                        ColumnDef::new(UserLogin::Username)
+                            .string()
+                            .not_null()
+                            .unique_key(),
+                    )
+                    .col(
+                        ColumnDef::new(UserLogin::Email)
+                            .string()
+                            .not_null()
+                            .unique_key(),
+                    )
                     .col(ColumnDef::new(UserLogin::PwHash).string().not_null())
                     .col(ColumnDef::new(UserLogin::CreatedAt).timestamp().not_null())
                     .to_owned(),
