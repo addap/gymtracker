@@ -1,9 +1,7 @@
 use axum::{
     body::HttpBody,
-    extract::{Form, Path, Query, State},
     http::StatusCode,
     middleware,
-    response::{Html, Response},
     routing::{get, get_service, post},
     Router, Server,
 };

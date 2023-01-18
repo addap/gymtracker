@@ -1,39 +1,36 @@
-use axum::extract::{FromRequest, Json, State};
+use axum::extract::{State, TypedHeader};
+use axum::headers::authorization::Bearer;
+use axum::headers::Authorization;
 use axum::middleware::Next;
 use axum::response::Response;
-use http::HeaderValue;
-use http::{header::AUTHORIZATION, StatusCode};
-use hyper::{Error, Request};
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
-use std::sync::Arc;
-use tower::{service_fn, Service, ServiceBuilder, ServiceExt};
-use tower_http::auth::{AuthorizeRequest, RequireAuthorizationLayer};
+use hyper::Request;
+use sea_orm::EntityTrait;
 
-use crate::AppState;
+use crate::{AppError, AppState};
+use gt_core::entities::prelude::*;
 
 pub mod exercise;
 pub mod user;
 
 pub async fn auth_middleware<B>(
+    TypedHeader(auth_header): TypedHeader<Authorization<Bearer>>,
     State(state): State<AppState>,
     mut request: Request<B>,
     next: Next<B>,
-) -> Result<Response, (StatusCode, &'static str)> {
-    if let Some(auth) = request.headers().get(AUTHORIZATION) {
-        let auth = auth.to_str().unwrap();
+) -> Result<Response, AppError> {
+    if let Some(user_id) = user::check_auth(auth_header.token()) {
+        let user = UserLogin::find_by_id(user_id)
+            .one(&state.conn)
+            .await?
+            .ok_or(AppError::ResourceNotFound)?;
 
-        if let Some(user_id) = user::check_auth(auth) {
-            // Set `user_id` as a request extension so it can be accessed by other
-            // services down the stack.
-            request.extensions_mut().insert(user_id);
-            let response = next.run(request).await;
+        // Set `user` as a request extension so it can be accessed by other
+        // services down the stack.
+        request.extensions_mut().insert(user);
+        let response = next.run(request).await;
 
-            Ok(response)
-        } else {
-            Err((StatusCode::UNAUTHORIZED, "asd"))
-        }
+        Ok(response)
     } else {
-        Err((StatusCode::UNAUTHORIZED, "def"))
+        Err(AppError::Auth)
     }
 }

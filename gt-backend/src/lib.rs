@@ -19,14 +19,21 @@ pub type AppState = Arc<InnerAppState>;
 pub enum AppError {
     #[error("Database error.")]
     Database(#[from] DbErr),
+    #[error("Authentication error.")]
+    Auth,
+    #[error("Resource not found.")]
+    ResourceNotFound,
 }
 
 impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
+        let msg = self.to_string();
         match self {
             AppError::Database(e) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, "Database error.").into_response()
+                (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
             }
+            AppError::Auth => (StatusCode::FORBIDDEN, msg).into_response(),
+            AppError::ResourceNotFound => (StatusCode::NOT_FOUND, msg).into_response(),
         }
     }
 }
