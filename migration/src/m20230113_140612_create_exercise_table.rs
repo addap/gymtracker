@@ -1,6 +1,6 @@
 use sea_orm_migration::prelude::*;
 
-use crate::m20230113_140607_create_user_table::LoginUser;
+use crate::m20230113_140607_create_user_table::UserLogin;
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -55,7 +55,7 @@ impl MigrationTrait for Migration {
                         ForeignKey::create()
                             .name("fk-exerciseset-user_id")
                             .from(ExerciseSet::Table, ExerciseSet::UserId)
-                            .to(LoginUser::Table, LoginUser::Id)
+                            .to(UserLogin::Table, UserLogin::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )

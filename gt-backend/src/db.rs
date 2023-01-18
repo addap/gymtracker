@@ -17,12 +17,12 @@ pub async fn populate(conn: &DatabaseConnection) -> Result<(), DbErr> {
             .one(conn)
             .await?;
         if res.is_none() {
-            let exerciseName = exercise_name::ActiveModel {
+            let exercise_name = exercise_name::ActiveModel {
                 name: ActiveValue::Set(name.to_owned()),
                 ..Default::default()
             };
 
-            ExerciseName::insert(exerciseName).exec(conn).await?;
+            ExerciseName::insert(exercise_name).exec(conn).await?;
         }
     }
 

@@ -1,10 +1,9 @@
 use axum::{extract::State, Json};
 use sea_orm::*;
 use serde::Deserialize;
-use serde_json::{json, Value};
-use std::sync::Arc;
+use serde_json::{json, to_value, Value};
 
-use crate::AppState;
+use crate::{AppState, Result};
 use gt_core::entities::{prelude::*, *};
 
 #[derive(Deserialize)]
@@ -16,28 +15,35 @@ pub async fn add_exercise_name(
     State(state): State<AppState>,
     Json(payload): Json<AddExercise>,
     // ) -> Result<InsertResult<exercise_name::ActiveModel>, DbErr> {
-) -> Json<Value> {
+) -> Result<Json<()>> {
     // TODO how to avoid unwrap and do error handling in axum?
     let exercise_name = exercise_name::ActiveModel {
         name: ActiveValue::Set(payload.name),
         ..Default::default()
     };
-    let res = ExerciseName::insert(exercise_name)
+    let _ = ExerciseName::insert(exercise_name)
         .exec(&state.conn)
-        .await
-        .unwrap();
+        .await?;
 
-    Json(json!(()))
+    Ok(Json(()))
 }
 
-pub async fn get_all_exercise_names(State(state): State<AppState>) -> Json<Value> {
-    let res = ExerciseName::find()
-        .all(&state.conn)
-        .await
-        .unwrap()
-        .into_iter()
-        .map(|exercise_name| exercise_name.name)
-        .collect::<Vec<_>>();
+pub async fn get_all_exercise_names(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<exercise_name::Model>>> {
+    let res: Vec<exercise_name::Model> = ExerciseName::find().all(&state.conn).await?;
 
-    Json(json!(res))
+    Ok(Json(res))
+}
+
+pub async fn get_exercise_sets_for_user(
+    State(state): State<AppState>,
+) -> Result<Json<Vec<exercise_set::Model>>> {
+    todo!();
+    Ok(Json(vec![]))
+}
+
+pub async fn add_exercise_set_for_user(State(state): State<AppState>) -> Result<Json<()>> {
+    todo!();
+    Ok(Json(()))
 }

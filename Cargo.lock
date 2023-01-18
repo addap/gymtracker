@@ -867,6 +867,7 @@ dependencies = [
  "sea-orm",
  "serde",
  "serde_json",
+ "thiserror",
  "tokio",
  "tower",
  "tower-cookies",
@@ -878,6 +879,7 @@ name = "gt-core"
 version = "0.1.0"
 dependencies = [
  "sea-orm",
+ "serde",
 ]
 
 [[package]]

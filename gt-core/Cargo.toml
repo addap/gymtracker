@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 sea-orm = { version = "0.10.6", features = [ "sqlx-sqlite", "runtime-tokio-rustls", "macros" ] }
+serde = "1.0.152"

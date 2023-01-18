@@ -9,19 +9,20 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(LoginUser::Table)
+                    .table(UserLogin::Table)
                     .if_not_exists()
                     .col(
-                        ColumnDef::new(LoginUser::Id)
+                        ColumnDef::new(UserLogin::Id)
                             .integer()
                             .not_null()
                             .auto_increment()
                             .primary_key()
                             .unique_key(),
                     )
-                    .col(ColumnDef::new(LoginUser::Username).string().not_null())
-                    .col(ColumnDef::new(LoginUser::PwHash).string().not_null())
-                    .col(ColumnDef::new(LoginUser::CreatedAt).timestamp().not_null())
+                    .col(ColumnDef::new(UserLogin::Username).string().not_null())
+                    .col(ColumnDef::new(UserLogin::Email).string().not_null())
+                    .col(ColumnDef::new(UserLogin::PwHash).string().not_null())
+                    .col(ColumnDef::new(UserLogin::CreatedAt).timestamp().not_null())
                     .to_owned(),
             )
             .await?;
@@ -50,7 +51,7 @@ impl MigrationTrait for Migration {
                         ForeignKey::create()
                             .name("fk-userinfo-user_id")
                             .from(UserInfo::Table, UserInfo::UserId)
-                            .to(LoginUser::Table, LoginUser::Id), // .on_delete(ForeignKeyAction::Cascade)
+                            .to(UserLogin::Table, UserLogin::Id), // .on_delete(ForeignKeyAction::Cascade)
                                                                   // .on_update(ForeignKeyAction::Cascade),
                     )
                     .to_owned(),
@@ -79,7 +80,7 @@ impl MigrationTrait for Migration {
                         ForeignKey::create()
                             .name("fk-userinfots-user_id")
                             .from(UserInfoTs::Table, UserInfoTs::UserId)
-                            .to(LoginUser::Table, LoginUser::Id)
+                            .to(UserLogin::Table, UserLogin::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
@@ -91,7 +92,7 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(LoginUser::Table).to_owned())
+            .drop_table(Table::drop().table(UserLogin::Table).to_owned())
             .await?;
 
         manager
@@ -108,10 +109,11 @@ impl MigrationTrait for Migration {
 
 /// Learn more at https://docs.rs/sea-query#iden
 #[derive(Iden)]
-pub enum LoginUser {
+pub enum UserLogin {
     Table,
     Id,
     Username,
+    Email,
     PwHash,
     CreatedAt,
 }

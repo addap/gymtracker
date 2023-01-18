@@ -13,7 +13,6 @@ use sea_orm::Database;
 use std::{env, net::SocketAddr, str::FromStr, sync::Arc};
 use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
-use tower_http::auth::RequireAuthorizationLayer;
 use tower_http::services::{ServeDir, ServeFile};
 
 use gt_backend::{api, db, AppState, InnerAppState};
@@ -36,17 +35,34 @@ async fn main() -> anyhow::Result<()> {
 
     let state = Arc::new(InnerAppState { conn });
 
-    let unauth_api_routes = Router::new().route("/user/login", post(api::user::login));
+    let unauth_api_routes = Router::new()
+        .route("/user/login", post(api::user::login))
+        .route("/user/register", post(api::user::register));
 
+    let token_auth = ServiceBuilder::new().layer(middleware::from_fn_with_state(
+        state.clone(),
+        api::auth_middleware,
+    ));
     let auth_api_routes = Router::new()
         .route(
             "/exercise/name",
             get(api::exercise::get_all_exercise_names).post(api::exercise::add_exercise_name),
         )
-        .layer(middleware::from_fn_with_state(
-            state.clone(),
-            api::auth_middleware,
-        ));
+        .route(
+            "/exercise/set",
+            get(api::exercise::get_exercise_sets_for_user)
+                .post(api::exercise::add_exercise_set_for_user),
+        )
+        .route(
+            "/user/info",
+            get(api::user::get_user_info).post(api::user::change_user_info),
+        )
+        .route(
+            "/user/info_ts",
+            get(api::user::get_user_info_ts).post(api::user::add_user_info_ts),
+        )
+        .route("/user/logout", post(api::user::logout))
+        .layer(token_auth);
 
     let app = Router::new()
         .merge(frontend_routes())
@@ -65,6 +81,8 @@ fn frontend_routes<Body: HttpBody + Send + 'static>() -> Router<AppState, Body> 
     let frontend_dir = env::var("FRONTEND_DIR").expect("FRONTEND_DIR is not set.");
 
     Router::new().nest_service(
+        // dioxus has a base_url property of a Router. However, I have no idea how to set it. A simple "Router { base_url: ... }" did not work.
+        // to avoid the overlapping routes problem, I should set the base url
         "/",
         get_service(
             ServeDir::new(&frontend_dir)
@@ -77,8 +95,4 @@ fn frontend_routes<Body: HttpBody + Send + 'static>() -> Router<AppState, Body> 
             )
         }),
     )
-}
-
-async fn handle(State(state): State<AppState>) -> &'static str {
-    "hello world"
 }

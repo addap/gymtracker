@@ -2,6 +2,6 @@
 
 pub use super::exercise_name::Entity as ExerciseName;
 pub use super::exercise_set::Entity as ExerciseSet;
-pub use super::login_user::Entity as LoginUser;
 pub use super::user_info::Entity as UserInfo;
 pub use super::user_info_ts::Entity as UserInfoTs;
+pub use super::user_login::Entity as UserLogin;
