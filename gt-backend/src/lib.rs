@@ -32,7 +32,7 @@ impl IntoResponse for AppError {
             AppError::Database(e) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response()
             }
-            AppError::Auth => (StatusCode::FORBIDDEN, msg).into_response(),
+            AppError::Auth => (StatusCode::UNAUTHORIZED, msg).into_response(),
             AppError::ResourceNotFound => (StatusCode::NOT_FOUND, msg).into_response(),
         }
     }
