@@ -2,6 +2,7 @@ use axum::extract::{Json, State};
 use axum::Extension;
 use chrono::Utc;
 use email_address::EmailAddress;
+use gt_core::models::UserAuth;
 use http::StatusCode;
 use pbkdf2::password_hash::PasswordHash;
 use pbkdf2::{
@@ -9,34 +10,16 @@ use pbkdf2::{
     Pbkdf2,
 };
 use sea_orm::*;
-use serde_json::{json, Value};
 
-use crate::{AppError, AppState, Result};
+use crate::{api::auth, AppError, AppState, Result};
 use gt_core::entities::{prelude::*, *};
-use gt_core::{models, models::UserAuth};
-
-const DEBUG_TOKEN: &str = "secrettoken";
-
-pub fn check_auth(token: &str) -> Option<i32> {
-    if token.starts_with(DEBUG_TOKEN) {
-        Some(
-            token
-                .chars()
-                .nth(token.len() - 1)
-                .unwrap()
-                .to_digit(10)
-                .unwrap() as i32,
-        )
-    } else {
-        None
-    }
-}
+use gt_core::{models, models::AuthToken};
 
 /// Sign up new user and return an auth token on success.
 pub async fn register(
     State(state): State<AppState>,
     Json(payload): Json<models::UserSignup>,
-) -> Result<Json<UserAuth>> {
+) -> Result<Json<AuthToken>> {
     if !EmailAddress::is_valid(&payload.email)
         || payload.display_name.is_empty()
         || payload.username.is_empty()
@@ -53,7 +36,7 @@ pub async fn register(
         .to_string();
 
     let new_user_login = user_login::ActiveModel {
-        username: ActiveValue::Set(payload.username),
+        username: ActiveValue::Set(payload.username.clone()),
         email: ActiveValue::Set(payload.email),
         pw_hash: ActiveValue::Set(pw_hash),
         created_at: ActiveValue::Set(Utc::now().naive_utc()),
@@ -68,18 +51,22 @@ pub async fn register(
     };
     UserInfo::insert(new_user_info).exec(&state.conn).await?;
 
-    let user_auth = UserAuth {
-        auth_token: format!("{}-{}", DEBUG_TOKEN.to_string(), new_user.last_insert_id),
-    };
+    let auth_token = auth::create_token(
+        &state,
+        UserAuth {
+            username: payload.username,
+            id: new_user.last_insert_id,
+        },
+    )?;
 
-    Ok(Json(user_auth))
+    Ok(Json(auth_token))
 }
 
 /// Login with username + password(hash) and return an auth token on success.
 pub async fn login(
     State(state): State<AppState>,
     Json(payload): Json<models::UserLogin>,
-) -> Result<Json<UserAuth>> {
+) -> Result<Json<AuthToken>> {
     // check username + password
     // generate token and put into db
     let user_login = UserLogin::find()
@@ -97,20 +84,25 @@ pub async fn login(
 
     Pbkdf2
         .verify_password(payload.password.as_bytes(), &pw_hash)
-        .map_err(|_| AppError::Auth)?;
+        .map_err(|_| AppError::ValidationError)?;
 
-    let user_auth = UserAuth {
-        auth_token: format!("{}-{}", DEBUG_TOKEN.to_string(), user_login.id),
-    };
+    let auth_token = auth::create_token(
+        &state,
+        UserAuth {
+            username: user_login.username,
+            id: user_login.id,
+        },
+    )?;
 
-    Ok(Json(user_auth))
+    Ok(Json(auth_token))
 }
 
+#[allow(unused_variables)]
 pub async fn logout(
     State(state): State<AppState>,
     Extension(user): Extension<user_login::Model>,
-) -> Result<Json<Value>> {
-    Ok(Json(json!(())))
+) -> Result<Json<()>> {
+    Ok(Json(()))
 }
 
 pub async fn change_user_info(

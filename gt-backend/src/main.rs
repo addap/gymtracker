@@ -5,7 +5,6 @@ use axum::{
     routing::{get, get_service, post},
     Router, Server,
 };
-// use gt_core::{Mutation as MutationCore, Query as QueryCore};
 use migration::{Migrator, MigratorTrait};
 use sea_orm::Database;
 use std::{env, net::SocketAddr, str::FromStr, sync::Arc};
@@ -20,9 +19,10 @@ async fn main() -> anyhow::Result<()> {
     env::set_var("RUST_LOG", "debug");
 
     dotenvy::dotenv().ok();
-    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
-    let host = env::var("HOST").expect("HOST is not set in .env file");
-    let port = env::var("PORT").expect("PORT is not set in .env file");
+    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set.");
+    let host = env::var("HOST").expect("HOST is not set.");
+    let port = env::var("PORT").expect("PORT is not set.");
+    let secret = env::var("SECRET").expect("SECRET is not set.");
     let server_url = format!("{}:{}", host, port);
 
     let conn = Database::connect(db_url).await?;
@@ -31,7 +31,7 @@ async fn main() -> anyhow::Result<()> {
     Migrator::up(&conn, None).await?;
     db::populate(&conn).await?;
 
-    let state = Arc::new(InnerAppState { conn });
+    let state: AppState = Arc::new(InnerAppState { conn, secret });
 
     let unauth_api_routes = Router::new()
         .route("/user/login", post(api::user::login))
@@ -39,7 +39,7 @@ async fn main() -> anyhow::Result<()> {
 
     let token_auth = ServiceBuilder::new().layer(middleware::from_fn_with_state(
         state.clone(),
-        api::auth_middleware,
+        api::auth::auth_middleware,
     ));
     let auth_api_routes = Router::new()
         .route(

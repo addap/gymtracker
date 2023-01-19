@@ -2,7 +2,7 @@ use axum::response::IntoResponse;
 use http::StatusCode;
 use migration::DbErr;
 use sea_orm::DatabaseConnection;
-use std::{result, sync::Arc};
+use std::{error::Error, result, sync::Arc};
 use thiserror::Error;
 
 pub mod api;
@@ -11,6 +11,7 @@ pub mod db;
 #[derive(Clone)]
 pub struct InnerAppState {
     pub conn: DatabaseConnection,
+    pub secret: String,
 }
 
 pub type AppState = Arc<InnerAppState>;
@@ -27,6 +28,9 @@ pub enum AppError {
     StatusCode(StatusCode, String),
     #[error("Form validation failed.")]
     ValidationError,
+    // TODO remove diagnostic message
+    #[error("{0}")]
+    Generic(Box<dyn Error>),
 }
 
 impl IntoResponse for AppError {
@@ -38,6 +42,7 @@ impl IntoResponse for AppError {
             AppError::ResourceNotFound => StatusCode::NOT_FOUND,
             AppError::StatusCode(status_code, _) => status_code,
             AppError::ValidationError => StatusCode::BAD_REQUEST,
+            AppError::Generic(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
         (status_code, msg).into_response()

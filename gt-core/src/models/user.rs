@@ -1,3 +1,4 @@
+use derive_more::{Deref, From};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
@@ -14,9 +15,19 @@ pub struct UserSignup {
     pub email: String,
 }
 
+#[derive(Deserialize, Serialize, Deref, From)]
+pub struct AuthToken(String);
+
+impl From<&str> for AuthToken {
+    fn from(token: &str) -> Self {
+        Self(token.to_string())
+    }
+}
+
 #[derive(Deserialize, Serialize)]
 pub struct UserAuth {
-    pub auth_token: String,
+    pub username: String,
+    pub id: i32,
 }
 
 #[derive(Deserialize, Serialize)]
