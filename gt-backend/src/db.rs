@@ -10,8 +10,15 @@ pub async fn populate(conn: &DatabaseConnection) -> Result<(), DbErr> {
         "Leg Extension",
         "Cable Row",
     ];
+    let names_japanese = vec![
+        "ベンチプレス",
+        "デッドリフト",
+        "スクワット",
+        "レッグエクステンション",
+        "シーテッドケーブルロー",
+    ];
 
-    for name in names {
+    for name in names.into_iter().chain(names_japanese.into_iter()) {
         let res = ExerciseName::find()
             .filter(exercise_name::Column::Name.eq(name))
             .one(conn)
