@@ -1,13 +1,13 @@
 use derive_more::{Deref, From};
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct UserLogin {
     pub username: String,
     pub password: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct UserSignup {
     pub display_name: String,
     pub username: String,
@@ -15,7 +15,7 @@ pub struct UserSignup {
     pub email: String,
 }
 
-#[derive(Deserialize, Serialize, Deref, From)]
+#[derive(Debug, Clone, Deserialize, Serialize, Deref, From)]
 pub struct AuthToken(String);
 
 impl From<&str> for AuthToken {
@@ -24,18 +24,18 @@ impl From<&str> for AuthToken {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct UserAuth {
     pub username: String,
     pub id: i32,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct UserInfo {
     pub display_name: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct UserInfoTs {
     pub height: Option<f32>,
     pub weight: Option<f32>,

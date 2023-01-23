@@ -18,18 +18,18 @@ pub type AppState = Arc<InnerAppState>;
 
 #[derive(Error, Debug)]
 pub enum AppError {
-    #[error("{0}")]
+    #[error("GT: {0}")]
     Database(#[from] DbErr),
-    #[error("Authentication error.")]
+    #[error("GT: Authentication error.")]
     Auth,
-    #[error("Resource not found.")]
+    #[error("GT: Resource not found.")]
     ResourceNotFound,
-    #[error("{1}")]
+    #[error("GT: {1}")]
     StatusCode(StatusCode, String),
-    #[error("Form validation failed.")]
+    #[error("GT: Form validation failed.")]
     ValidationError,
     // TODO remove diagnostic message
-    #[error("{0}")]
+    #[error("GT: {0}")]
     Generic(Box<dyn Error>),
 }
 

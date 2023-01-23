@@ -11,12 +11,14 @@ use std::{env, net::SocketAddr, str::FromStr, sync::Arc};
 use tower::ServiceBuilder;
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::{ServeDir, ServeFile};
+use tower_http::trace::TraceLayer;
 
 use gt_backend::{api, db, AppState, InnerAppState};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     env::set_var("RUST_LOG", "debug");
+    tracing_subscriber::fmt::init();
 
     dotenvy::dotenv().ok();
     let db_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set.");
@@ -66,6 +68,7 @@ async fn main() -> anyhow::Result<()> {
         .merge(frontend_routes())
         .nest("/api", unauth_api_routes.merge(auth_api_routes))
         .layer(CookieManagerLayer::new())
+        .layer(TraceLayer::new_for_http())
         .with_state(state);
 
     let addr = SocketAddr::from_str(&server_url).unwrap();
@@ -79,8 +82,6 @@ fn frontend_routes<Body: HttpBody + Send + 'static>() -> Router<AppState, Body> 
     let frontend_dir = env::var("FRONTEND_DIR").expect("FRONTEND_DIR is not set.");
 
     Router::new().nest_service(
-        // dioxus has a base_url property of a Router. However, I have no idea how to set it. A simple "Router { base_url: ... }" did not work.
-        // to avoid the overlapping routes problem, I should set the base url
         "/",
         get_service(
             ServeDir::new(&frontend_dir)

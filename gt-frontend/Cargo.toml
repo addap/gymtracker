@@ -6,9 +6,18 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+const_format = "0.2.30"
 dioxus = { version = "0.3.1" }
+dioxus-router = { version = "0.3.0", features = [ "web" ] }
 dioxus-web = "0.3.0"
+fermi = "0.3.0"
 gt-core = { path = "../gt-core" }
+log = "0.4.17"
+reqwest = { version = "0.11.14", features = [ "json" ] }
 serde = "1.0.152"
 serde_json = "1.0.91"
+url = "2.3.1"
 wasm-bindgen = "0.2.83"
+wasm-cookies = "0.2.0"
+wasm-logger = "0.2.0"
+web-sys = { version = "0.3.60", features = [ "Storage" ] }

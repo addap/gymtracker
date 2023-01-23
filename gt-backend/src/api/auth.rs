@@ -3,6 +3,7 @@ use axum::headers::authorization::Bearer;
 use axum::headers::Authorization;
 use axum::middleware::Next;
 use axum::response::Response;
+use chrono::Utc;
 use hmac::{Hmac, Mac};
 use hyper::Request;
 use jwt::{SignWithKey, VerifyWithKey};
@@ -35,6 +36,7 @@ pub fn create_token(state: &AppState, user: UserAuth) -> Result<AuthToken> {
     let mut claims = HashMap::new();
     claims.insert("sub", user.id.to_string());
     claims.insert("name", user.username);
+    claims.insert("iat", Utc::now().naive_utc().to_string());
 
     let token = claims
         .sign_with_key(&key)
