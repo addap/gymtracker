@@ -1,8 +1,10 @@
-pub mod components;
+mod auth;
+mod components;
 
+use auth::{init_auth_token, ActiveAuthToken};
 use dioxus::prelude::*;
 use dioxus_router::{Route, Router};
-use fermi::{use_atom_ref, use_init_atom_root, use_read, use_set, Atom};
+use fermi::{use_init_atom_root, use_read, use_set};
 
 use components as c;
 use gt_core::models::AuthToken;
@@ -11,15 +13,11 @@ const BANNER: &str = "引き締めたいカラダのために！";
 const API_BASE: &str = "http://localhost:8000/api";
 const BASE_URL: &str = "/app";
 
-static ActiveAuthToken: Atom<Option<AuthToken>> = |_| None;
-
-fn is_logged_in(cx: &Scope) -> bool {
-    let auth_token = use_read(cx, ActiveAuthToken);
-    auth_token.is_some()
-}
-
 pub fn app(cx: Scope) -> Element {
     use_init_atom_root(&cx);
+
+    let setter = use_set(&cx, ActiveAuthToken);
+    init_auth_token(setter);
 
     cx.render(rsx! {
         Router {

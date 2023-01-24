@@ -5,11 +5,14 @@ use fermi::{use_atom_ref, use_init_atom_root, use_read, use_set, Atom};
 use log::info;
 use serde_json::json;
 
-use crate::{ActiveAuthToken, API_BASE};
+use crate::{
+    auth::{set_auth_token, ActiveAuthToken},
+    API_BASE,
+};
 use gt_core::models::{AuthToken, UserLogin};
 
 pub fn LoginPage(cx: Scope) -> Element {
-    let set_auth_token = use_set(&cx, ActiveAuthToken);
+    let setter = use_set(&cx, ActiveAuthToken);
 
     cx.render(rsx! {
         div {
@@ -18,7 +21,7 @@ pub fn LoginPage(cx: Scope) -> Element {
             input { id: "password", name: "password", r#type: "password", placeholder: "password" }
             button {
                 onclick: move |_| cx.spawn({
-                    let s = set_auth_token.clone();
+                    let setter = setter.clone();
 
                     async move {
                         let client = reqwest::Client::new();
@@ -33,7 +36,7 @@ pub fn LoginPage(cx: Scope) -> Element {
                         let token = res.unwrap().json::<AuthToken>().await.unwrap();
 
                         info!("{:?}", token);
-                        s(Some(token));
+                        set_auth_token(&setter, Some(token));
                         ()
                     }
                 }),

@@ -16,7 +16,7 @@ pub struct UserSignup {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Deref, From)]
-pub struct AuthToken(String);
+pub struct AuthToken(pub String);
 
 impl From<&str> for AuthToken {
     fn from(token: &str) -> Self {

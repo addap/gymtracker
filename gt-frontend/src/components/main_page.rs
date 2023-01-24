@@ -5,7 +5,7 @@ use dioxus_router::Link;
 use log::info;
 use wasm_cookies::cookies;
 
-use crate::{is_logged_in, BASE_URL};
+use crate::{auth::is_logged_in, BASE_URL};
 
 pub fn MainPage(cx: Scope) -> Element {
     if is_logged_in(&cx) {
