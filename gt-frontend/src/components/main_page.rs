@@ -5,6 +5,7 @@ use dioxus_router::Link;
 use log::info;
 use wasm_cookies::cookies;
 
+use crate::components as c;
 use crate::{auth::is_logged_in, BASE_URL};
 
 pub fn MainPage(cx: Scope) -> Element {
@@ -12,13 +13,7 @@ pub fn MainPage(cx: Scope) -> Element {
         cx.render(rsx! {
             div {
                 p { "Main page" }
-                input {
-                    onclick: move |evt| {},
-                    r#type: "button",
-                    id: "add_set",
-                    name: "add_set",
-                    value: "+"
-                }
+                c::AddExerciseSet {}
             }
         })
     } else {
