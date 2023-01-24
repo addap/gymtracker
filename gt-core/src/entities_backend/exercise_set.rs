@@ -9,14 +9,22 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub user_id: i32,
-    pub name: String,
+    pub name_id: i32,
     pub reps: i32,
-    pub weight: f32,
+    pub weight: f64,
     pub created_at: DateTime,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::exercise_name::Entity",
+        from = "Column::NameId",
+        to = "super::exercise_name::Column::Id",
+        on_update = "Cascade",
+        on_delete = "Cascade"
+    )]
+    ExerciseName,
     #[sea_orm(
         belongs_to = "super::user_login::Entity",
         from = "Column::UserId",
@@ -25,6 +33,12 @@ pub enum Relation {
         on_delete = "Cascade"
     )]
     UserLogin,
+}
+
+impl Related<super::exercise_name::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::ExerciseName.def()
+    }
 }
 
 impl Related<super::user_login::Entity> for Entity {

@@ -1223,6 +1223,7 @@ dependencies = [
  "http",
  "hyper",
  "jwt",
+ "log",
  "migration",
  "pbkdf2",
  "sea-orm",

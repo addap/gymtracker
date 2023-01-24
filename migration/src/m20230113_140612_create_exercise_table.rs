@@ -43,9 +43,9 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(ExerciseSet::UserId).integer().not_null())
-                    .col(ColumnDef::new(ExerciseSet::Name).string().not_null())
+                    .col(ColumnDef::new(ExerciseSet::NameId).integer().not_null())
                     .col(ColumnDef::new(ExerciseSet::Reps).integer().not_null())
-                    .col(ColumnDef::new(ExerciseSet::Weight).float().not_null())
+                    .col(ColumnDef::new(ExerciseSet::Weight).double().not_null())
                     .col(
                         ColumnDef::new(ExerciseSet::CreatedAt)
                             .timestamp()
@@ -56,6 +56,14 @@ impl MigrationTrait for Migration {
                             .name("fk-exerciseset-user_id")
                             .from(ExerciseSet::Table, ExerciseSet::UserId)
                             .to(UserLogin::Table, UserLogin::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk-exerciseset-name")
+                            .from(ExerciseSet::Table, ExerciseSet::NameId)
+                            .to(ExerciseName::Table, ExerciseName::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
@@ -92,7 +100,7 @@ enum ExerciseSet {
     Table,
     Id,
     UserId,
-    Name,
+    NameId,
     Reps,
     Weight,
     CreatedAt,

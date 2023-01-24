@@ -81,10 +81,10 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(UserInfoTs::UserId).integer().not_null())
-                    .col(ColumnDef::new(UserInfoTs::Height).float())
-                    .col(ColumnDef::new(UserInfoTs::Weight).float())
-                    .col(ColumnDef::new(UserInfoTs::MuscleMass).float())
-                    .col(ColumnDef::new(UserInfoTs::BodyFat).float())
+                    .col(ColumnDef::new(UserInfoTs::Height).double())
+                    .col(ColumnDef::new(UserInfoTs::Weight).double())
+                    .col(ColumnDef::new(UserInfoTs::MuscleMass).double())
+                    .col(ColumnDef::new(UserInfoTs::BodyFat).double())
                     .col(ColumnDef::new(UserInfoTs::CreatedAt).timestamp().not_null())
                     .foreign_key(
                         ForeignKey::create()

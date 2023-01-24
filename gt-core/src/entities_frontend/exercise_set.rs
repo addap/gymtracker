@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     pub id: i32,
     pub user_id: i32,
-    pub name: String,
+    pub name_id: i32,
     pub reps: i32,
-    pub weight: f32,
+    pub weight: f64,
     pub created_at: DateTime,
 }

@@ -37,8 +37,8 @@ pub struct UserInfo {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct UserInfoTs {
-    pub height: Option<f32>,
-    pub weight: Option<f32>,
-    pub muscle_mass: Option<f32>,
-    pub body_fat: Option<f32>,
+    pub height: Option<f64>,
+    pub weight: Option<f64>,
+    pub muscle_mass: Option<f64>,
+    pub body_fat: Option<f64>,
 }
