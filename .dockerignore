@@ -1,0 +1,7 @@
+target/
+.vscode/
+
+Dockerfile
+.docker*
+.env*
+*.md
