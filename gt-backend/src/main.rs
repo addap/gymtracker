@@ -6,6 +6,7 @@ use axum::{
     routing::{get, get_service, post},
     Router, Server,
 };
+use gt_core::APP_BASE;
 use migration::{Migrator, MigratorTrait};
 use sea_orm::Database;
 use std::{env, net::SocketAddr, str::FromStr, sync::Arc};
@@ -83,9 +84,9 @@ fn frontend_routes<Body: HttpBody + Send + 'static>() -> Router<AppState, Body> 
     let frontend_dir = env::var("FRONTEND_DIR").expect("FRONTEND_DIR is not set.");
 
     Router::new()
-        .route("/", get(|| async { Redirect::temporary("/app") }))
+        .route("/", get(|| async { Redirect::temporary(APP_BASE) }))
         .nest_service(
-            "/app",
+            APP_BASE,
             get_service(
                 ServeDir::new(&frontend_dir)
                     .fallback(ServeFile::new(format!("{}{}", frontend_dir, "/index.html"))),

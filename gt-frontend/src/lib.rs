@@ -8,10 +8,10 @@ use fermi::{use_init_atom_root, use_read, use_set};
 
 use components as c;
 use gt_core::models::AuthToken;
+pub use gt_core::APP_BASE;
 
 const BANNER: &str = "引き締めたいカラダのために！";
 const API_BASE: &str = "http://localhost:8000/api";
-const BASE_URL: &str = "/app";
 
 pub fn app(cx: Scope) -> Element {
     use_init_atom_root(&cx);
@@ -21,7 +21,8 @@ pub fn app(cx: Scope) -> Element {
 
     cx.render(rsx! {
         Router {
-            base_url: BASE_URL,
+            base_url: APP_BASE,
+            c::Navbar {}
             p { BANNER }
             Route { to: "/login", c::LoggedOut{ c::LoginPage {} }}
             Route { to: "/register", c::LoggedOut {  c::RegisterPage {}  }}
