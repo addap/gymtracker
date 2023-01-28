@@ -2,6 +2,7 @@ use axum::{
     body::HttpBody,
     http::StatusCode,
     middleware,
+    response::Redirect,
     routing::{get, get_service, post},
     Router, Server,
 };
@@ -81,17 +82,19 @@ async fn main() -> anyhow::Result<()> {
 fn frontend_routes<Body: HttpBody + Send + 'static>() -> Router<AppState, Body> {
     let frontend_dir = env::var("FRONTEND_DIR").expect("FRONTEND_DIR is not set.");
 
-    Router::new().nest_service(
-        "/",
-        get_service(
-            ServeDir::new(&frontend_dir)
-                .fallback(ServeFile::new(format!("{}{}", frontend_dir, "/index.html"))),
-        )
-        .handle_error(|error: std::io::Error| async move {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Unhandled internal error: {}", error),
+    Router::new()
+        .route("/", get(|| async { Redirect::temporary("/app") }))
+        .nest_service(
+            "/app",
+            get_service(
+                ServeDir::new(&frontend_dir)
+                    .fallback(ServeFile::new(format!("{}{}", frontend_dir, "/index.html"))),
             )
-        }),
-    )
+            .handle_error(|error: std::io::Error| async move {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Unhandled internal error: {}", error),
+                )
+            }),
+        )
 }

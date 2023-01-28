@@ -27,7 +27,7 @@ pub fn app(cx: Scope) -> Element {
             Route { to: "/register", c::LoggedOut {  c::RegisterPage {}  }}
             Route { to: "/history", c::LoggedIn { c::HistoryPage {} }}
             Route { to: "/stats", c::LoggedIn { c::StatsPage {} }}
-            Route { to: "/", c::MainPage {} }
+            Route { to: "", c::MainPage {} }
         }
     })
 }
