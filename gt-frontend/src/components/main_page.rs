@@ -13,7 +13,7 @@ pub fn MainPage(cx: Scope) -> Element {
         cx.render(rsx! {
             div {
                 p { "Main page" }
-                c::AddExerciseSet {}
+                c::AddExerciseSetWeighted {}
             }
         })
     } else {

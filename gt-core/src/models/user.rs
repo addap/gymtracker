@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use derive_more::{Deref, From};
 use serde::{Deserialize, Serialize};
 
@@ -17,6 +19,12 @@ pub struct UserSignup {
 
 #[derive(Debug, Clone, Deserialize, Serialize, Deref, From)]
 pub struct AuthToken(pub String);
+
+impl Display for AuthToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.0, f)
+    }
+}
 
 impl From<&str> for AuthToken {
     fn from(token: &str) -> Self {
