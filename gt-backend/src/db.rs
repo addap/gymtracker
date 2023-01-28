@@ -1,4 +1,5 @@
 use gt_core::entities::{prelude::*, *};
+use gt_core::models;
 use sea_orm::*;
 
 /// Populate the database with some information.
@@ -26,6 +27,7 @@ pub async fn populate(conn: &DatabaseConnection) -> Result<(), DbErr> {
         if res.is_none() {
             let exercise_name = exercise_name::ActiveModel {
                 name: ActiveValue::Set(name.to_owned()),
+                kind: ActiveValue::Set(models::ExerciseKind::Weighted.into()),
                 ..Default::default()
             };
 

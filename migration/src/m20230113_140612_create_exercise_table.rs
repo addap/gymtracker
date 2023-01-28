@@ -26,6 +26,7 @@ impl MigrationTrait for Migration {
                             .not_null()
                             .unique_key(),
                     )
+                    .col(ColumnDef::new(ExerciseName::Kind).integer().not_null())
                     .to_owned(),
             )
             .await?;
@@ -44,8 +45,9 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(ExerciseSet::UserId).integer().not_null())
                     .col(ColumnDef::new(ExerciseSet::NameId).integer().not_null())
-                    .col(ColumnDef::new(ExerciseSet::Reps).integer().not_null())
-                    .col(ColumnDef::new(ExerciseSet::Weight).double().not_null())
+                    .col(ColumnDef::new(ExerciseSet::Reps).integer())
+                    .col(ColumnDef::new(ExerciseSet::Weight).double())
+                    .col(ColumnDef::new(ExerciseSet::Time).integer())
                     .col(
                         ColumnDef::new(ExerciseSet::CreatedAt)
                             .timestamp()
@@ -93,6 +95,7 @@ enum ExerciseName {
     Table,
     Id,
     Name,
+    Kind,
 }
 
 #[derive(Iden)]
@@ -103,5 +106,6 @@ enum ExerciseSet {
     NameId,
     Reps,
     Weight,
+    Time,
     CreatedAt,
 }

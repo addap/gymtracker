@@ -10,8 +10,9 @@ pub struct Model {
     pub id: i32,
     pub user_id: i32,
     pub name_id: i32,
-    pub reps: i32,
-    pub weight: f64,
+    pub reps: Option<i32>,
+    pub weight: Option<f64>,
+    pub time: Option<i32>,
     pub created_at: DateTime,
 }
 

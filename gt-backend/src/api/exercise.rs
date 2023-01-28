@@ -9,7 +9,7 @@ use gt_core::models;
 pub async fn add_exercise_name(
     State(state): State<AppState>,
     #[allow(unused_variables)] Extension(user): Extension<user_login::Model>,
-    Json(payload): Json<models::AddExercise>,
+    Json(payload): Json<models::ExerciseName>,
 ) -> Result<Json<()>> {
     let exercise_name = exercise_name::ActiveModel {
         name: ActiveValue::Set(payload.name),
@@ -26,8 +26,11 @@ pub async fn add_exercise_name(
 pub async fn get_all_exercise_names(
     State(state): State<AppState>,
     #[allow(unused_variables)] Extension(user): Extension<user_login::Model>,
-) -> Result<Json<Vec<exercise_name::Model>>> {
-    let res = ExerciseName::find().all(&state.conn).await?;
+) -> Result<Json<Vec<models::ExerciseName>>> {
+    let res = ExerciseName::find()
+        .into_model::<models::ExerciseName>()
+        .all(&state.conn)
+        .await?;
 
     Ok(Json(res))
 }
@@ -38,16 +41,17 @@ pub async fn add_exercise_set_for_user(
     Json(payload): Json<models::ExerciseSet>,
 ) -> Result<Json<()>> {
     // get or create exercise name
-    let name = ExerciseName::find()
-        .filter(exercise_name::Column::Name.eq(payload.name.clone()))
+    let opt_name = ExerciseName::find()
+        .filter(exercise_name::Column::Name.eq(payload.name()))
         .one(&state.conn)
         .await?;
 
-    let name_id = if let Some(name) = name {
+    let name_id = if let Some(name) = opt_name {
         name.id
     } else {
         let new_name = exercise_name::ActiveModel {
-            name: ActiveValue::Set(payload.name),
+            name: ActiveValue::Set(payload.name().to_string()),
+            kind: ActiveValue::Set(payload.kind().into()),
             ..Default::default()
         };
         let res = ExerciseName::insert(new_name).exec(&state.conn).await?;
@@ -57,10 +61,8 @@ pub async fn add_exercise_set_for_user(
     let new_exercise_set = exercise_set::ActiveModel {
         user_id: ActiveValue::Set(user.id),
         name_id: ActiveValue::Set(name_id),
-        reps: ActiveValue::Set(payload.reps),
-        weight: ActiveValue::Set(payload.weight),
         created_at: ActiveValue::Set(Utc::now().naive_utc()),
-        ..Default::default()
+        ..payload.into()
     };
 
     ExerciseSet::insert(new_exercise_set)
@@ -74,8 +76,29 @@ pub async fn get_exercise_sets_for_user(
     State(state): State<AppState>,
     Extension(user): Extension<user_login::Model>,
 ) -> Result<Json<Vec<models::ExerciseSetQuery>>> {
+    let res_weighted = get_weighted_exercise_sets_for_user(&state, user.id).await?;
+    let res_bodyweight = get_bodyweight_exercise_sets_for_user(&state, user.id).await?;
+
+    let res = res_weighted
+        .into_iter()
+        .map(|exs| models::ExerciseSetQuery::Weighted(exs))
+        .chain(
+            res_bodyweight
+                .into_iter()
+                .map(|exs| models::ExerciseSetQuery::Bodyweight(exs)),
+        )
+        .collect();
+
+    Ok(Json(res))
+}
+
+async fn get_weighted_exercise_sets_for_user(
+    state: &AppState,
+    user_id: i32,
+) -> Result<Vec<models::ExerciseSetWeightedQuery>> {
     let q = ExerciseSet::find()
-        .filter(exercise_set::Column::UserId.eq(user.id))
+        .filter(exercise_set::Column::UserId.eq(user_id))
+        .filter(exercise_name::Column::Kind.eq(models::ExerciseKind::Weighted))
         .column_as(exercise_name::Column::Name, "name")
         .join(
             JoinType::InnerJoin,
@@ -85,9 +108,30 @@ pub async fn get_exercise_sets_for_user(
     log::info!("{}", q.build(DbBackend::Sqlite).to_string());
 
     let res = q
-        .into_model::<models::ExerciseSetQuery>()
+        .into_model::<models::ExerciseSetWeightedQuery>()
         .all(&state.conn)
         .await?;
 
-    Ok(Json(res))
+    Ok(res)
+}
+
+async fn get_bodyweight_exercise_sets_for_user(
+    state: &AppState,
+    user_id: i32,
+) -> Result<Vec<models::ExerciseSetBodyweightQuery>> {
+    let q = ExerciseSet::find()
+        .filter(exercise_set::Column::UserId.eq(user_id))
+        .filter(exercise_name::Column::Kind.eq(models::ExerciseKind::Bodyweight))
+        .column_as(exercise_name::Column::Name, "name")
+        .join(
+            JoinType::InnerJoin,
+            exercise_set::Relation::ExerciseName.def(),
+        );
+
+    let res = q
+        .into_model::<models::ExerciseSetBodyweightQuery>()
+        .all(&state.conn)
+        .await?;
+
+    Ok(res)
 }
