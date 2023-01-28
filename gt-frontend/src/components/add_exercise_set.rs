@@ -21,6 +21,7 @@ pub fn AddExerciseSetWeighted(cx: Scope) -> Element {
             value: "{exercise_set_name}",
             oninput: move |evt| exercise_set_name.set(evt.value.clone()),
         }
+        br {}
         input {
             r#type: "number",
             id: "exercise-set-weight",
@@ -33,6 +34,7 @@ pub fn AddExerciseSetWeighted(cx: Scope) -> Element {
                 }
             }
         }
+        br {}
         input {
             r#type: "number",
             id: "exercise-set-reps",
@@ -45,9 +47,11 @@ pub fn AddExerciseSetWeighted(cx: Scope) -> Element {
                 }
             }
         }
+        br {}
         input {
             onclick: move |_| cx.spawn({
                 to_owned![exercise_set_name, exercise_set_reps, exercise_set_weight, auth_token];
+                
                 async move {
                     let client = reqwest::Client::new();
                     

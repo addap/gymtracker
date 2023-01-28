@@ -6,7 +6,7 @@ use log::info;
 use wasm_cookies::cookies;
 
 use crate::components as c;
-use crate::{auth::is_logged_in, BASE_URL};
+use crate::{auth::is_logged_in, APP_BASE};
 
 pub fn MainPage(cx: Scope) -> Element {
     if is_logged_in(&cx) {
@@ -20,8 +20,9 @@ pub fn MainPage(cx: Scope) -> Element {
         cx.render(rsx! {
             div {
                 p { "Main page" }
-                Link { to: concatcp!(BASE_URL, "/register"), "Register"}
-                Link { to: concatcp!(BASE_URL, "/login"), "Login" }
+                Link { to: concatcp!(APP_BASE, "/register"), "Register"}
+                br {}
+                Link { to: concatcp!(APP_BASE, "/login"), "Login" }
             }
         })
     }

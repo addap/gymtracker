@@ -5,7 +5,7 @@ use derive_more::From;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, TryFromPrimitive, IntoPrimitive)]
+#[derive(Debug, Clone, Deserialize, Serialize, TryFromPrimitive, IntoPrimitive, PartialEq)]
 #[repr(i32)]
 #[cfg_attr(not(target_arch = "wasm32"), derive(EnumIter, DeriveActiveEnum))]
 #[cfg_attr(
@@ -19,56 +19,56 @@ pub enum ExerciseKind {
     Bodyweight = 1,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[cfg_attr(not(target_arch = "wasm32"), derive(FromQueryResult))]
 pub struct ExerciseName {
     pub name: String,
     pub kind: ExerciseKind,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct ExerciseSetWeighted {
     pub name: String,
     pub reps: i32,
     pub weight: f64,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct ExerciseSetBodyweight {
     pub name: String,
     pub reps: i32,
 }
 
-#[derive(Deserialize, Serialize, From)]
+#[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
 pub enum ExerciseSet {
     Weighted(ExerciseSetWeighted),
     Bodyweight(ExerciseSetBodyweight),
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[cfg_attr(not(target_arch = "wasm32"), derive(FromQueryResult))]
 pub struct ExerciseSetWeightedQuery {
-    id: i32,
-    user_id: i32,
-    name_id: i32,
-    name: String,
-    reps: i32,
-    weight: f64,
-    created_at: chrono::NaiveDateTime,
+    pub id: i32,
+    pub user_id: i32,
+    pub name_id: i32,
+    pub name: String,
+    pub reps: i32,
+    pub weight: f64,
+    pub created_at: chrono::NaiveDateTime,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[cfg_attr(not(target_arch = "wasm32"), derive(FromQueryResult))]
 pub struct ExerciseSetBodyweightQuery {
-    id: i32,
-    user_id: i32,
-    name_id: i32,
-    name: String,
-    reps: i32,
-    created_at: chrono::NaiveDateTime,
+    pub id: i32,
+    pub user_id: i32,
+    pub name_id: i32,
+    pub name: String,
+    pub reps: i32,
+    pub created_at: chrono::NaiveDateTime,
 }
 
-#[derive(Deserialize, Serialize, From)]
+#[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
 pub enum ExerciseSetQuery {
     Weighted(ExerciseSetWeightedQuery),
     Bodyweight(ExerciseSetBodyweightQuery),

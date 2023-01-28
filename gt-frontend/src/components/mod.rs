@@ -1,16 +1,23 @@
 mod access_control;
 mod add_exercise_set;
+mod exercise_set;
 mod history_page;
 mod login_page;
 mod main_page;
+mod nav;
 mod register_page;
 mod stats_page;
 
 pub use access_control::LoggedIn;
 pub use access_control::LoggedOut;
+pub use access_control::Logout;
 pub use add_exercise_set::AddExerciseSetWeighted;
+pub use exercise_set::ExerciseSet;
+pub use exercise_set::ExerciseSetBodyweight;
+pub use exercise_set::ExerciseSetWeighted;
 pub use history_page::HistoryPage;
 pub use login_page::LoginPage;
 pub use main_page::MainPage;
+pub use nav::Navbar;
 pub use register_page::RegisterPage;
 pub use stats_page::StatsPage;

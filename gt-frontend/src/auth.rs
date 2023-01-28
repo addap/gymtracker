@@ -7,7 +7,7 @@ use gt_core::models::AuthToken;
 
 pub static ActiveAuthToken: Atom<Option<AuthToken>> = |_| None;
 
-pub fn is_logged_in(cx: &Scope) -> bool {
+pub fn is_logged_in<'a, T>(cx: &Scope<'a, T>) -> bool {
     let auth_token = use_read(cx, ActiveAuthToken);
     auth_token.is_some()
 }
@@ -25,15 +25,25 @@ pub fn init_auth_token(setter: &Rc<dyn Fn(Option<AuthToken>)>) {
     setter(token);
 }
 
-pub fn set_auth_token(setter: &Rc<dyn Fn(Option<AuthToken>)>, token: Option<AuthToken>) {
+pub fn set_auth_token(setter: &Rc<dyn Fn(Option<AuthToken>)>, opt_token: Option<AuthToken>) {
     //
-    setter(token.clone());
-    let token = token.unwrap_or(AuthToken(String::from("")));
-    window()
-        .unwrap()
-        .local_storage()
-        .unwrap()
-        .unwrap()
-        .set_item("auth_token", &token)
-        .unwrap();
+    setter(opt_token.clone());
+
+    if let Some(token) = opt_token {
+        window()
+            .unwrap()
+            .local_storage()
+            .unwrap()
+            .unwrap()
+            .set_item("auth_token", &token)
+            .unwrap();
+    } else {
+        window()
+            .unwrap()
+            .local_storage()
+            .unwrap()
+            .unwrap()
+            .delete("auth_token")
+            .unwrap();
+    }
 }
