@@ -7,8 +7,9 @@ use gt_core::models::{AuthToken, UserSignup};
 use log::info;
 
 use crate::{
+    api_url,
     auth::{set_auth_token, ActiveAuthToken},
-    API_BASE, APP_BASE,
+    APP_BASE,
 };
 
 pub fn RegisterPage(cx: Scope) -> Element {
@@ -71,7 +72,7 @@ pub fn RegisterPage(cx: Scope) -> Element {
 
                     async move {
                         let client = reqwest::Client::new();
-                        let res = client.post(concatcp!(API_BASE, "/user/register")).json(&UserSignup {
+                        let res = client.post(api_url("/user/register")).json(&UserSignup {
                             username: (*username.current()).clone(),
                             password: (*password.current()).clone(),
                             display_name: (*display_name.current()).clone(),

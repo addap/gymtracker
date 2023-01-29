@@ -8,7 +8,6 @@ services:
       - .env.docker
     ports:
       - "8000:8000"
-    command: "yes"
   postgres:
     image: postgres:15
     env_file:

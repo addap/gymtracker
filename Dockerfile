@@ -5,7 +5,7 @@ RUN rustup target add wasm32-unknown-unknown && cargo install trunk
 WORKDIR /usr/src/gymtracker
 COPY . .
 RUN cargo install --path gt-backend
-RUN cd gt-frontend/ && trunk build
+RUN cd gt-frontend/ && ./build.sh
 
 FROM debian:bullseye-slim
 

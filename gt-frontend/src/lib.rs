@@ -10,8 +10,12 @@ use components as c;
 use gt_core::models::AuthToken;
 pub use gt_core::APP_BASE;
 
-const BANNER: &str = "引き締めたいカラダのために！";
-const API_BASE: &str = "http://localhost:8000/api";
+const BANNER: &'static str = "引き締めたいカラダのために！";
+
+fn api_url(endpoint: &str) -> String {
+    let base = web_sys::window().unwrap().origin();
+    base + "/api" + endpoint
+}
 
 pub fn app(cx: Scope) -> Element {
     use_init_atom_root(&cx);

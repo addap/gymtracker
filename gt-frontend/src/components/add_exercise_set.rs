@@ -1,11 +1,13 @@
+#![allow(non_snake_case)]
 use const_format::concatcp;
 use dioxus::prelude::*;
 use fermi::use_read;
 use gt_core::models::{ExerciseSet, ExerciseSetWeighted};
 use log::info;
 
-use crate::auth::ActiveAuthToken;
-use crate::API_BASE;
+use crate::{
+    api_url, auth::ActiveAuthToken
+};
 
 pub fn AddExerciseSetWeighted(cx: Scope) -> Element {
     let exercise_set_name = use_state(&cx, || "".to_string());
@@ -62,7 +64,7 @@ pub fn AddExerciseSetWeighted(cx: Scope) -> Element {
                             weight: *exercise_set_weight.current(),
                         }).into();
 
-                        let res = client.post(concatcp!(API_BASE, "/exercise/set")).json(&exs).bearer_auth(auth_token.unwrap_or("".into()))
+                        let res = client.post(api_url("/exercise/set")).json(&exs).bearer_auth(auth_token.unwrap_or("".into()))
                         .send().await;
                         if let Err(ref e) = res {
                             info!("{}", e);

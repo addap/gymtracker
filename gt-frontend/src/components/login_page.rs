@@ -7,8 +7,9 @@ use log::info;
 use serde_json::json;
 
 use crate::{
+    api_url,
     auth::{set_auth_token, ActiveAuthToken},
-    API_BASE, APP_BASE,
+    APP_BASE,
 };
 use gt_core::models::{AuthToken, UserLogin};
 
@@ -43,7 +44,7 @@ pub fn LoginPage(cx: Scope) -> Element {
 
                     async move {
                         let client = reqwest::Client::new();
-                        let res = client.post(concatcp!(API_BASE, "/user/login")).json(&UserLogin {
+                        let res = client.post(api_url("/user/login")).json(&UserLogin {
                             username: (*username.current()).clone(),
                             password: (*password.current()).clone(),
                         }).send().await;

@@ -6,7 +6,7 @@ use gt_core::models::{self, exercise};
 use log::info;
 
 use crate::components as c;
-use crate::{auth::ActiveAuthToken, API_BASE};
+use crate::{api_url, auth::ActiveAuthToken};
 
 pub fn HistoryPage(cx: Scope) -> Element {
     // TODO maybe use use_ref?
@@ -19,7 +19,7 @@ pub fn HistoryPage(cx: Scope) -> Element {
         async move {
             let client = reqwest::Client::new();
             let res = client
-                .get(concatcp!(API_BASE, "/exercise/set"))
+                .get(api_url("/exercise/set"))
                 .bearer_auth(auth_token.unwrap_or("".into()))
                 .send()
                 .await;
