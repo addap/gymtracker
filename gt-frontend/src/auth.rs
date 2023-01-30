@@ -1,14 +1,14 @@
 use dioxus::prelude::*;
-use fermi::{use_atom_ref, use_read, use_set, Atom};
+use fermi::{use_read, Atom};
 use std::rc::Rc;
-use web_sys::{window, Storage};
+use web_sys::window;
 
 use gt_core::models::AuthToken;
 
-pub static ActiveAuthToken: Atom<Option<AuthToken>> = |_| None;
+pub static ACTIVE_AUTH_TOKEN: Atom<Option<AuthToken>> = |_| None;
 
 pub fn is_logged_in<'a, T>(cx: &Scope<'a, T>) -> bool {
-    let auth_token = use_read(cx, ActiveAuthToken);
+    let auth_token = use_read(cx, ACTIVE_AUTH_TOKEN);
     auth_token.is_some()
 }
 

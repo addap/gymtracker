@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
-use fermi::{use_read, use_set};
+use fermi::use_set;
 
-use crate::auth::{is_logged_in, set_auth_token, ActiveAuthToken};
+use crate::auth::{is_logged_in, set_auth_token, ACTIVE_AUTH_TOKEN};
 
 #[derive(Props)]
 pub struct AccessControlProps<'a> {
@@ -39,7 +39,7 @@ pub fn LoggedOut<'a>(cx: Scope<'a, AccessControlProps<'a>>) -> Element<'a> {
 }
 
 pub fn Logout(cx: Scope) -> Element {
-    let auth_setter = use_set(&cx, ActiveAuthToken);
+    let auth_setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
 
     cx.render(rsx! {
         div {

@@ -1,19 +1,18 @@
 #![allow(non_snake_case)]
-use const_format::concatcp;
 use dioxus::prelude::*;
 use fermi::use_read;
 use gt_core::models::{ExerciseSet, ExerciseSetWeighted};
 use log::info;
 
 use crate::{
-    api_url, auth::ActiveAuthToken
+    api_url, auth::ACTIVE_AUTH_TOKEN
 };
 
 pub fn AddExerciseSetWeighted(cx: Scope) -> Element {
     let exercise_set_name = use_state(&cx, || "".to_string());
     let exercise_set_weight = use_state(&cx, || 1.0);
     let exercise_set_reps = use_state(&cx, || 1);
-    let auth_token = use_read(&cx, ActiveAuthToken);
+    let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
 
     cx.render(rsx! {
         input {

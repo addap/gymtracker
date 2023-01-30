@@ -1,13 +1,12 @@
 mod auth;
 mod components;
 
-use auth::{init_auth_token, ActiveAuthToken};
+use auth::{init_auth_token, ACTIVE_AUTH_TOKEN};
 use dioxus::prelude::*;
 use dioxus_router::{Route, Router};
-use fermi::{use_init_atom_root, use_read, use_set};
+use fermi::{use_init_atom_root, use_set};
 
 use components as c;
-use gt_core::models::AuthToken;
 pub use gt_core::APP_BASE;
 
 const BANNER: &'static str = "引き締めたいカラダのために！";
@@ -20,7 +19,7 @@ fn api_url(endpoint: &str) -> String {
 pub fn app(cx: Scope) -> Element {
     use_init_atom_root(&cx);
 
-    let setter = use_set(&cx, ActiveAuthToken);
+    let setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
     init_auth_token(setter);
 
     cx.render(rsx! {

@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
 
-trunk build --public-url "app/"
+trunk build --public-url "app/" "$@"

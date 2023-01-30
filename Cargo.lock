@@ -1253,12 +1253,14 @@ dependencies = [
 name = "gt-frontend"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "const_format",
  "dioxus",
  "dioxus-router",
  "dioxus-web",
  "fermi",
  "gt-core",
+ "js-sys",
  "log",
  "reqwest",
  "serde",

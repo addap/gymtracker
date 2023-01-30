@@ -6,12 +6,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+chrono = "0.4.23"
 const_format = "0.2.30"
 dioxus = { version = "0.3.1" }
 dioxus-router = { version = "0.3.0", features = [ "web" ] }
 dioxus-web = "0.3.0"
 fermi = "0.3.0"
 gt-core = { path = "../gt-core" }
+js-sys = "0.3.60"
 log = "0.4.17"
 reqwest = { version = "0.11.14", features = [ "json" ] }
 serde = "1.0.152"

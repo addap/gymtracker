@@ -1,5 +1,4 @@
 #![allow(non_snake_case)]
-use const_format::concatcp;
 use dioxus::prelude::*;
 use dioxus_router::use_router;
 use fermi::use_set;
@@ -8,12 +7,12 @@ use log::info;
 
 use crate::{
     api_url,
-    auth::{set_auth_token, ActiveAuthToken},
+    auth::{set_auth_token, ACTIVE_AUTH_TOKEN},
     APP_BASE,
 };
 
 pub fn RegisterPage(cx: Scope) -> Element {
-    let auth_setter = use_set(&cx, ActiveAuthToken);
+    let auth_setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
     let router = use_router(&cx);
 
     let username = use_state(&cx, || "".to_string());
