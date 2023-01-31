@@ -110,7 +110,7 @@ pub async fn get_exercise_sets_for_user(
     Ok(Json(res))
 }
 
-async fn get_weighted_exercise_sets_for_user(
+pub async fn get_weighted_exercise_sets_for_user(
     state: &AppState,
     user_id: i32,
 ) -> Result<Vec<models::ExerciseSetWeightedQuery>> {
@@ -118,6 +118,7 @@ async fn get_weighted_exercise_sets_for_user(
         .filter(exercise_set::Column::UserId.eq(user_id))
         .filter(exercise_name::Column::Kind.eq(models::ExerciseKind::Weighted))
         .column_as(exercise_name::Column::Name, "name")
+        .order_by(exercise_set::Column::CreatedAt, Order::Desc)
         .join(
             JoinType::InnerJoin,
             exercise_set::Relation::ExerciseName.def(),
@@ -133,7 +134,7 @@ async fn get_weighted_exercise_sets_for_user(
     Ok(res)
 }
 
-async fn get_bodyweight_exercise_sets_for_user(
+pub async fn get_bodyweight_exercise_sets_for_user(
     state: &AppState,
     user_id: i32,
 ) -> Result<Vec<models::ExerciseSetBodyweightQuery>> {
@@ -141,6 +142,7 @@ async fn get_bodyweight_exercise_sets_for_user(
         .filter(exercise_set::Column::UserId.eq(user_id))
         .filter(exercise_name::Column::Kind.eq(models::ExerciseKind::Bodyweight))
         .column_as(exercise_name::Column::Name, "name")
+        .order_by(exercise_set::Column::CreatedAt, Order::Desc)
         .join(
             JoinType::InnerJoin,
             exercise_set::Relation::ExerciseName.def(),
