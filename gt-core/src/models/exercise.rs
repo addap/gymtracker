@@ -87,6 +87,18 @@ pub enum ExerciseSetQuery {
     Bodyweight(ExerciseSetBodyweightQuery),
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
+pub struct PRWeightedQuery {
+    pub name: String,
+    pub pr_weight: Vec<f64>,
+    pub pr_reps: Vec<i32>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
+pub struct PRQuery {
+    pub weighted: Vec<PRWeightedQuery>,
+}
+
 impl ExerciseSet {
     pub fn name(&self) -> &str {
         match self {

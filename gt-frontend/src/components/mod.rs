@@ -5,6 +5,7 @@ mod history_page;
 mod login_page;
 mod main_page;
 mod nav;
+mod pr_page;
 mod register_page;
 mod stats_page;
 
@@ -15,5 +16,6 @@ pub use history_page::*;
 pub use login_page::*;
 pub use main_page::*;
 pub use nav::*;
+pub use pr_page::*;
 pub use register_page::*;
 pub use stats_page::*;

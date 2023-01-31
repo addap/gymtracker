@@ -12,7 +12,9 @@ pub fn Navbar(cx: Scope) -> Element {
             if is_logged_in(&cx) {
                 rsx!{
                     c::Logout {}
+                    Link { to: concatcp!(APP_BASE, "/"), "Home" }
                     Link { to: concatcp!(APP_BASE, "/history"), "History" }
+                    Link { to: concatcp!(APP_BASE, "/pr"), "PR" }
                 }
             }
         }

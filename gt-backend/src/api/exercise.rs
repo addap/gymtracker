@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+
 use axum::{extract::State, Extension, Json};
 use chrono::Utc;
+use itertools::Itertools;
 use sea_orm::*;
 
 use crate::{AppState, Result};
@@ -108,6 +111,63 @@ pub async fn get_exercise_sets_for_user(
         .collect::<Result<Vec<_>>>()?;
 
     Ok(Json(res))
+}
+
+pub async fn get_exercise_set_prs_for_user(
+    State(state): State<AppState>,
+    Extension(user): Extension<user_login::Model>,
+) -> Result<Json<models::PRQuery>> {
+    let res_weighted = get_weighted_exercise_set_prs_for_user(&state, user.id).await?;
+
+    let res = models::PRQuery {
+        weighted: res_weighted,
+    };
+
+    Ok(Json(res))
+}
+
+pub async fn get_weighted_exercise_set_prs_for_user(
+    state: &AppState,
+    user_id: i32,
+) -> Result<Vec<models::PRWeightedQuery>> {
+    let q = ExerciseSet::find()
+        .filter(exercise_set::Column::UserId.eq(user_id))
+        .column_as(exercise_name::Column::Name, "name")
+        .filter(exercise_name::Column::Kind.eq(models::ExerciseKind::Weighted))
+        .join(
+            JoinType::InnerJoin,
+            exercise_set::Relation::ExerciseName.def(),
+        );
+
+    log::info!("{}", q.build(DbBackend::Sqlite).to_string());
+
+    let res = q
+        .into_model::<models::ExerciseSetWeightedQuery>()
+        .all(&state.conn)
+        .await?;
+
+    let mut data_per_exercise: HashMap<String, Vec<(f64, i32)>> = HashMap::with_capacity(res.len());
+    for exs in res {
+        let prs = data_per_exercise.entry(exs.name).or_insert(Vec::new());
+        prs.push((exs.weight, exs.reps));
+    }
+
+    let mut prs = Vec::with_capacity(data_per_exercise.len());
+    for (name, mut data) in data_per_exercise.into_iter().sorted_by_key(|x| x.0.clone()) {
+        data.sort_by(|a, b| b.0.total_cmp(&a.0));
+        let pr_weight = data.iter().take(3).map(|(weight, _)| *weight).collect();
+
+        data.sort_by(|a, b| b.1.cmp(&a.1));
+        let pr_reps = data.iter().take(3).map(|(_, reps)| *reps).collect();
+
+        prs.push(models::PRWeightedQuery {
+            name,
+            pr_weight,
+            pr_reps,
+        });
+    }
+
+    Ok(prs)
 }
 
 pub async fn get_weighted_exercise_sets_for_user(

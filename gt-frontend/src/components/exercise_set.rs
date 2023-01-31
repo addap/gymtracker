@@ -1,17 +1,23 @@
 #![allow(non_snake_case)]
-use chrono::{Local, TimeZone};
+use chrono::{DateTime, Local, TimeZone};
 use dioxus::prelude::*;
 use log::info;
 
 use gt_core::models;
+
+fn format_date(t: DateTime<Local>) -> String {
+    if t.date_naive() == Local::now().date_naive() {
+        format!("At {}", t.time().format("%H:%M:%S").to_string())
+    } else {
+        format!("On {}", t.date_naive().to_string())
+    }
+}
 
 #[inline_props]
 pub fn ExerciseSetWeighted<'a>(
     cx: Scope,
     exs: &'a models::ExerciseSetWeightedQuery,
 ) -> Element<'a> {
-    //
-    // TODO move to global initialization
     let created_at_local = Local.from_utc_datetime(&exs.created_at);
 
     cx.render(rsx! {
@@ -25,11 +31,7 @@ pub fn ExerciseSetWeighted<'a>(
                 format!("Reps: {}", exs.reps.to_string())
             }
             div {
-                if created_at_local.date_naive() == Local::now().date_naive() {
-                    format!("At {}", created_at_local.time().format("%H:%M:%S").to_string())
-                } else {
-                    format!("On {}", created_at_local.date_naive().to_string())
-                }
+                format_date(created_at_local)
             }
         }
     })
@@ -40,14 +42,17 @@ pub fn ExerciseSetBodyweight<'a>(
     cx: Scope,
     exs: &'a models::ExerciseSetBodyweightQuery,
 ) -> Element<'a> {
-    //
+    let created_at_local = Local.from_utc_datetime(&exs.created_at);
+
     cx.render(rsx! {
         div {
             exs.name.clone()
             br {}
             div {
-                "Reps: "
-                exs.reps.to_string()
+                format!("Reps: {}", exs.reps.to_string())
+            }
+            div {
+                format_date(created_at_local)
             }
         }
     })

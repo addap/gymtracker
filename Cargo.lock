@@ -1222,6 +1222,7 @@ dependencies = [
  "hmac",
  "http",
  "hyper",
+ "itertools",
  "jwt",
  "log",
  "migration",

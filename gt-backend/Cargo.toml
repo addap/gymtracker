@@ -17,6 +17,7 @@ gt-core = { path = "../gt-core" }
 hmac = "0.12.1"
 http = "0.2.8"
 hyper = { version = "0.14.23", features = ["full"] }
+itertools = "0.10.5"
 jwt = "0.16.0"
 log = "0.4.17"
 migration = { path = "../migration" }

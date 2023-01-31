@@ -56,6 +56,10 @@ async fn main() -> anyhow::Result<()> {
                 .post(api::exercise::add_exercise_set_for_user),
         )
         .route(
+            "/exercise/pr",
+            get(api::exercise::get_exercise_set_prs_for_user),
+        )
+        .route(
             "/user/info",
             get(api::user::get_user_info).post(api::user::change_user_info),
         )

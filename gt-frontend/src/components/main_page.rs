@@ -49,6 +49,10 @@ fn LoggedInMainPage(cx: Scope) -> Element {
             }
         }
     });
+    use_future(&cx, (), |()| {
+        to_owned![fetch_names];
+        async move { fetch_names.send(FetchNames) }
+    });
 
     cx.render(rsx! {
         div {
