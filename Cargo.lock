@@ -1242,6 +1242,7 @@ dependencies = [
 name = "gt-core"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "chrono",
  "derive_more",
  "num_enum",

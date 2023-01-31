@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use chrono::{DateTime, FixedOffset, Local};
+use chrono::{Local, TimeZone};
 use dioxus::prelude::*;
 use log::info;
 
@@ -12,16 +12,7 @@ pub fn ExerciseSetWeighted<'a>(
 ) -> Element<'a> {
     //
     // TODO move to global initialization
-    let now = js_sys::Date::new_0();
-    info!("jsnow {:?}", now);
-    let offset_min = now.get_timezone_offset();
-    info!("offset minutes {:?}", offset_min);
-    let offset = FixedOffset::east_opt(-(offset_min * 60.0) as i32).unwrap();
-
-    let created_at_aware: DateTime<FixedOffset> = DateTime::from_utc(exs.created_at, offset);
-    info!("created at utc {}", exs.created_at);
-    info!("created at aware {}", created_at_aware);
-    info!("now {}", Local::now().date_naive());
+    let created_at_local = Local.from_utc_datetime(&exs.created_at);
 
     cx.render(rsx! {
         div {
@@ -34,10 +25,10 @@ pub fn ExerciseSetWeighted<'a>(
                 format!("Reps: {}", exs.reps.to_string())
             }
             div {
-                if created_at_aware.date_naive() == Local::now().date_naive() {
-                    format!("At {}", created_at_aware.time().format("%H:%M:%S").to_string())
+                if created_at_local.date_naive() == Local::now().date_naive() {
+                    format!("At {}", created_at_local.time().format("%H:%M:%S").to_string())
                 } else {
-                    format!("On {}", created_at_aware.date_naive().to_string())
+                    format!("On {}", created_at_local.date_naive().to_string())
                 }
             }
         }

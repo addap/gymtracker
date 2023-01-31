@@ -1,8 +1,8 @@
-#[cfg(not(target_arch = "wasm32"))]
-use sea_orm::{DeriveActiveEnum, EnumIter, FromQueryResult};
-
+use anyhow::anyhow;
 use derive_more::From;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
+#[cfg(not(target_arch = "wasm32"))]
+use sea_orm::{DeriveActiveEnum, EnumIter, FromQueryResult};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize, TryFromPrimitive, IntoPrimitive, PartialEq)]
@@ -47,6 +47,19 @@ pub enum ExerciseSet {
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[cfg_attr(not(target_arch = "wasm32"), derive(FromQueryResult))]
+pub struct ExerciseSetJoinQuery {
+    pub id: i32,
+    pub user_id: i32,
+    pub name_id: i32,
+    pub name: String,
+    pub kind: ExerciseKind,
+    pub reps: Option<i32>,
+    pub weight: Option<f64>,
+    pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[cfg_attr(not(target_arch = "wasm32"), derive(FromQueryResult))]
 pub struct ExerciseSetWeightedQuery {
     pub id: i32,
     pub user_id: i32,
@@ -87,5 +100,47 @@ impl ExerciseSet {
             ExerciseSet::Weighted(_) => ExerciseKind::Weighted,
             ExerciseSet::Bodyweight(_) => ExerciseKind::Bodyweight,
         }
+    }
+}
+
+impl TryFrom<ExerciseSetJoinQuery> for ExerciseSetBodyweightQuery {
+    type Error = anyhow::Error;
+
+    fn try_from(value: ExerciseSetJoinQuery) -> Result<Self, Self::Error> {
+        let reps = value
+            .reps
+            .ok_or(anyhow!("Malformed input. Field `reps` not present."))?;
+
+        Ok(Self {
+            id: value.id,
+            user_id: value.user_id,
+            name_id: value.name_id,
+            name: value.name,
+            reps,
+            created_at: value.created_at,
+        })
+    }
+}
+
+impl TryFrom<ExerciseSetJoinQuery> for ExerciseSetWeightedQuery {
+    type Error = anyhow::Error;
+
+    fn try_from(value: ExerciseSetJoinQuery) -> Result<Self, Self::Error> {
+        let reps = value
+            .reps
+            .ok_or(anyhow!("Malformed input. Field `reps` not present."))?;
+        let weight = value
+            .weight
+            .ok_or(anyhow!("Malformed input. Field `weight` not present."))?;
+
+        Ok(Self {
+            id: value.id,
+            user_id: value.user_id,
+            name_id: value.name_id,
+            name: value.name,
+            reps,
+            weight,
+            created_at: value.created_at,
+        })
     }
 }

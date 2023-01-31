@@ -2,7 +2,7 @@ use axum::response::IntoResponse;
 use http::StatusCode;
 use migration::DbErr;
 use sea_orm::DatabaseConnection;
-use std::{error::Error, result, sync::Arc};
+use std::{result, sync::Arc};
 use thiserror::Error;
 
 pub mod api;
@@ -28,9 +28,8 @@ pub enum AppError {
     StatusCode(StatusCode, String),
     #[error("GT: Form validation failed.")]
     ValidationError,
-    // TODO remove diagnostic message
     #[error("GT: {0}")]
-    Generic(Box<dyn Error>),
+    Generic(#[from] anyhow::Error),
 }
 
 impl IntoResponse for AppError {

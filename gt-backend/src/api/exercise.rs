@@ -76,18 +76,36 @@ pub async fn get_exercise_sets_for_user(
     State(state): State<AppState>,
     Extension(user): Extension<user_login::Model>,
 ) -> Result<Json<Vec<models::ExerciseSetQuery>>> {
-    let res_weighted = get_weighted_exercise_sets_for_user(&state, user.id).await?;
-    let res_bodyweight = get_bodyweight_exercise_sets_for_user(&state, user.id).await?;
+    let q = ExerciseSet::find()
+        .filter(exercise_set::Column::UserId.eq(user.id))
+        .column_as(exercise_name::Column::Name, "name")
+        .column_as(exercise_name::Column::Kind, "kind")
+        .order_by(exercise_set::Column::CreatedAt, Order::Desc)
+        .join(
+            JoinType::InnerJoin,
+            exercise_set::Relation::ExerciseName.def(),
+        );
 
-    let res = res_weighted
+    log::info!("{}", q.build(DbBackend::Sqlite).to_string());
+
+    let res = q
+        .into_model::<models::ExerciseSetJoinQuery>()
+        .all(&state.conn)
+        .await?;
+
+    let res = res
         .into_iter()
-        .map(|exs| models::ExerciseSetQuery::Weighted(exs))
-        .chain(
-            res_bodyweight
-                .into_iter()
-                .map(|exs| models::ExerciseSetQuery::Bodyweight(exs)),
-        )
-        .collect();
+        .map(|exsj| match exsj.kind {
+            models::ExerciseKind::Weighted => {
+                let exs: models::ExerciseSetWeightedQuery = exsj.try_into()?;
+                Ok(models::ExerciseSetQuery::Weighted(exs))
+            }
+            models::ExerciseKind::Bodyweight => {
+                let exs: models::ExerciseSetBodyweightQuery = exsj.try_into()?;
+                Ok(models::ExerciseSetQuery::Bodyweight(exs))
+            }
+        })
+        .collect::<Result<Vec<_>>>()?;
 
     Ok(Json(res))
 }

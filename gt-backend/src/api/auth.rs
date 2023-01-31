@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use axum::extract::{State, TypedHeader};
 use axum::headers::authorization::Bearer;
 use axum::headers::Authorization;
@@ -16,12 +17,10 @@ use gt_core::entities::prelude::*;
 use gt_core::models::{AuthToken, UserAuth};
 
 pub fn verify_token(state: &AppState, token: AuthToken) -> Result<i32> {
-    let key: Hmac<Sha256> = Hmac::new_from_slice(state.secret.as_bytes())
-        .map_err(|e| AppError::Generic(Box::new(e)))?;
+    let key: Hmac<Sha256> =
+        Hmac::new_from_slice(state.secret.as_bytes()).map_err(|e| anyhow!(e))?;
 
-    let claims: HashMap<String, String> = token
-        .verify_with_key(&key)
-        .map_err(|e| AppError::Generic(Box::new(e)))?;
+    let claims: HashMap<String, String> = token.verify_with_key(&key).map_err(|e| anyhow!(e))?;
 
     let user_id = claims.get("sub").ok_or(AppError::Auth)?;
     let user_id: i32 = user_id.parse().map_err(|_| AppError::Auth)?;
@@ -30,17 +29,15 @@ pub fn verify_token(state: &AppState, token: AuthToken) -> Result<i32> {
 }
 
 pub fn create_token(state: &AppState, user: UserAuth) -> Result<AuthToken> {
-    let key: Hmac<Sha256> = Hmac::new_from_slice(state.secret.as_bytes())
-        .map_err(|e| AppError::Generic(Box::new(e)))?;
+    let key: Hmac<Sha256> =
+        Hmac::new_from_slice(state.secret.as_bytes()).map_err(|e| anyhow!(e))?;
 
     let mut claims = HashMap::new();
     claims.insert("sub", user.id.to_string());
     claims.insert("name", user.username);
     claims.insert("iat", Utc::now().naive_utc().to_string());
 
-    let token = claims
-        .sign_with_key(&key)
-        .map_err(|e| AppError::Generic(Box::new(e)))?;
+    let token = claims.sign_with_key(&key).map_err(|e| anyhow!(e))?;
 
     Ok(token.into())
 }
