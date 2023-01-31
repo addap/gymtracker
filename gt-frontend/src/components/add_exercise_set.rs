@@ -6,16 +6,25 @@ use log::info;
 use crate::{
     api_url, auth::ACTIVE_AUTH_TOKEN
 };
+use crate::components as c;
 use gt_core::models;
 
-#[inline_props]
-pub fn AddExerciseSetWeighted(cx: Scope, exercise_names: Vec<models::ExerciseName>) -> Element {
+
+#[derive(Props)]
+pub struct AddExerciseProps<'a> {
+    exercise_names: Vec<models::ExerciseName>,
+    fetch_names: &'a Coroutine<c::main_page::FetchNames>,
+}
+
+pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
     let w_exercise_set_name = use_state(&cx, || "".to_string());
     let w_exercise_set_weight = use_state(&cx, || 1.0);
     let w_exercise_set_reps = use_state(&cx, || 1);
 
-    let names_datalist = exercise_names.into_iter()
+
+
+    let names_datalist = cx.props.exercise_names.iter()
         .filter(|exn| exn.kind == models::ExerciseKind::Weighted)
         .map(|exn| 
             rsx! { 
@@ -59,6 +68,7 @@ pub fn AddExerciseSetWeighted(cx: Scope, exercise_names: Vec<models::ExerciseNam
         button {
             onclick: move |_| cx.spawn({
                 to_owned![w_exercise_set_name, w_exercise_set_reps, w_exercise_set_weight, auth_token];
+                let fetch_names = cx.props.fetch_names.clone();
                 
                 async move {
                     let client = reqwest::Client::new();
@@ -76,6 +86,8 @@ pub fn AddExerciseSetWeighted(cx: Scope, exercise_names: Vec<models::ExerciseNam
                             info!("{}", e);
                             return;
                         }
+
+                        fetch_names.send(c::main_page::FetchNames);
                     }
                 }
             }),
@@ -84,13 +96,12 @@ pub fn AddExerciseSetWeighted(cx: Scope, exercise_names: Vec<models::ExerciseNam
     })
 }
 
-#[inline_props]
-pub fn AddExerciseSetBodyweight(cx: Scope, exercise_names: Vec<models::ExerciseName>) -> Element {
+pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
     let w_exercise_set_name = use_state(&cx, || "".to_string());
     let w_exercise_set_reps = use_state(&cx, || 1);
 
-    let names_datalist = exercise_names.into_iter()
+    let names_datalist = cx.props.exercise_names.iter()
         .filter(|exn| exn.kind == models::ExerciseKind::Bodyweight)
         .map(|exn| 
             rsx! { 
@@ -123,6 +134,7 @@ pub fn AddExerciseSetBodyweight(cx: Scope, exercise_names: Vec<models::ExerciseN
         button {
             onclick: move |_| cx.spawn({
                 to_owned![w_exercise_set_name, w_exercise_set_reps, auth_token];
+                let fetch_names = cx.props.fetch_names.clone();
                 
                 async move {
                     let client = reqwest::Client::new();
@@ -139,6 +151,8 @@ pub fn AddExerciseSetBodyweight(cx: Scope, exercise_names: Vec<models::ExerciseN
                             info!("{}", e);
                             return;
                         }
+
+                        fetch_names.send(c::main_page::FetchNames);
                     }
                 }
             }),
