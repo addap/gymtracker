@@ -1265,6 +1265,7 @@ dependencies = [
  "gloo-timers",
  "gt-core",
  "js-sys",
+ "lazy_static",
  "log",
  "reqwest",
  "serde",
