@@ -40,8 +40,15 @@ pub fn LoginPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             button {
                 onclick: move |_| cx.spawn({
                     to_owned![auth_setter, router, username, password];
+                    let display_message = cx.props.display_message.clone();
 
                     async move {
+                        if username.current().is_empty()
+                        || password.current().is_empty() {
+                            display_message.send(UIMessage::error("Empty input.".to_string()));
+                            return;
+                        }
+
                         let client = reqwest::Client::new();
                         let res = client.post(api_url("/user/login")).json(&UserLogin {
                             username: (*username.current()).clone(),
@@ -50,6 +57,7 @@ pub fn LoginPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
                         if let Err(ref e) = res {
                             info!("{}", e);
+                            display_message.send(UIMessage::error("Login failed.".to_string()));
                             return;
                         }
                         let token = res.unwrap().json::<AuthToken>().await.unwrap();

@@ -69,8 +69,25 @@ pub fn RegisterPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             button {
                 onclick: move |_| cx.spawn({
                     to_owned![auth_setter, router, username, password, password2, display_name, email];
+                    let display_message = cx.props.display_message.clone();
 
                     async move {
+                        if username.current().is_empty()
+                        || password.current().is_empty() 
+                        || password2.current().is_empty() 
+                        || email.current().is_empty() 
+                        || display_name.current().is_empty() {
+                            display_message.send(UIMessage::error("Empty input.".to_string()));
+                            return;
+                        }
+
+                        if password.current() != password2.current() {
+                            password.set("".to_string());
+                            password2.set("".to_string());
+                            display_message.send(UIMessage::error("Passwords do not match.".to_string()));
+                            return;
+                        }
+
                         let client = reqwest::Client::new();
                         let res = client.post(api_url("/user/register")).json(&UserSignup {
                             username: (*username.current()).clone(),
@@ -81,6 +98,7 @@ pub fn RegisterPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
                         if let Err(ref e) = res {
                             info!("{}", e);
+                            display_message.send(UIMessage::error("Registration failed.".to_string()));
                             return;
                         }
                         let token = res.unwrap().json::<AuthToken>().await.unwrap();
