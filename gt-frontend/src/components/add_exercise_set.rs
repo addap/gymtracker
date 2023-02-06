@@ -36,6 +36,7 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
 
     cx.render(rsx! {
         div {
+            class: "my-3",
             div {
                 class: "row",
                 p { 
@@ -152,6 +153,7 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
 
     cx.render(rsx! {
         div {
+            class: "my-3",
             div {
                 class: "row",
                 p { 

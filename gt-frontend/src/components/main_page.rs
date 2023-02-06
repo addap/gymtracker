@@ -85,9 +85,14 @@ fn LoggedOutMainPage(cx: Scope) -> Element {
 pub fn MainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     cx.render(rsx! {
         div {
-            p {
+            div {
                 class: "row",
-                "Main page"
+                div {
+                    p {
+                        class: "col",
+                        "Main page"
+                    }
+                }
             }
             if is_logged_in(&cx) {
                 rsx!{ LoggedInMainPage { display_message: &cx.props.display_message } }
