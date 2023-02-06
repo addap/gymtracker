@@ -39,14 +39,12 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
             div {
                 class: "row",
                 p { 
-                    class: "col-12",
+                    class: "col",
                     "Weighted Exercise Set" 
                 }
-            }
-            div {
-                class: "row",
+                div { class: "w-100" }
                 div {
-                    class: "col",
+                    class: "col-12 col-sm-2",
                     input {
                         list: "w-exercise-names-list",
                         value: "{w_exercise_set_name}",
@@ -59,7 +57,7 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                     }
                 }
                 div {
-                    class: "col",
+                    class: "col-12 col-sm-2",
                     input {
                         id: "w-exercise-set-weight",
                         r#type: "number",
@@ -77,7 +75,7 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                     }
                 }
                 div {
-                    class: "col",
+                    class: "col-12 col-sm-2",
                     input {
                         id: "w-exercise-set-reps",
                         r#type: "number",
@@ -94,13 +92,12 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                         " reps"
                     }
                 }
-            }
-            div {
-                class: "row",
                 div {
-                    class: "col-6",
+                    class: "w-100",
+                }
+                div {
                     button {
-                        class: "btn btn-outline-success",
+                        class: "col-3 col-sm-1 btn btn-outline-success",
                         onclick: move |_| cx.spawn({
                             to_owned![w_exercise_set_name, w_exercise_set_reps, w_exercise_set_weight, auth_token];
                             let fetch_names = cx.props.fetch_names.clone();
@@ -157,12 +154,13 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
         div {
             div {
                 class: "row",
-                p { "Bodyweight Exercise Set" }
-            }
-            div {
-                class: "row",
+                p { 
+                    class: "col", 
+                    "Bodyweight Exercise Set" 
+                }
+                div { class: "w-100" }
                 div {
-                    class: "col",
+                    class: "col-12 col-sm-2",
                     input {
                         list: "b-exercise-names-list",
                         value: "{w_exercise_set_name}",
@@ -175,7 +173,7 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                     }
                 }
                 div {
-                    class: "col",
+                    class: "col-12 col-sm-2",
                     input {
                         id: "b-exercise-set-reps",
                         r#type: "number",
@@ -192,13 +190,10 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                         " reps"
                     }
                 }
-            }
-            div {
-                class: "row",
+                div { class: "w-100" }
                 div {
-                    class: "col-6",
                     button {
-                        class: "btn btn-outline-success",
+                        class: "col-3 col-sm-1 btn btn-outline-success",
                         onclick: move |_| cx.spawn({
                             to_owned![w_exercise_set_name, w_exercise_set_reps, auth_token];
                             let fetch_names = cx.props.fetch_names.clone();
