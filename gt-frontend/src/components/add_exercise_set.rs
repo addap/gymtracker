@@ -4,9 +4,10 @@ use fermi::use_read;
 use log::info;
 
 use crate::{
-    api_url, auth::ACTIVE_AUTH_TOKEN
+    api_url, auth::ACTIVE_AUTH_TOKEN,
+    messages::UIMessage,
+    components as c
 };
-use crate::components as c;
 use gt_core::models;
 
 
@@ -14,6 +15,7 @@ use gt_core::models;
 pub struct AddExerciseProps<'a> {
     exercise_names: Vec<models::ExerciseName>,
     fetch_names: &'a Coroutine<c::main_page::FetchNames>,
+    display_message: &'a Coroutine<UIMessage>,
 }
 
 pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Element<'a> {
@@ -82,6 +84,7 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                 onclick: move |_| cx.spawn({
                     to_owned![w_exercise_set_name, w_exercise_set_reps, w_exercise_set_weight, auth_token];
                     let fetch_names = cx.props.fetch_names.clone();
+                    let display_message = cx.props.display_message.clone();
                     
                     async move {
                         let client = reqwest::Client::new();
@@ -101,6 +104,12 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                             }
 
                             fetch_names.send(c::main_page::FetchNames);
+                            display_message.send(UIMessage::info(format!("Added exercise \"{}\" x{} ({}kg)",
+                                w_exercise_set_name.current(),
+                                w_exercise_set_reps.current(),
+                                w_exercise_set_weight.current()
+                            )));
+                        }
                     }
                 }),
                 "+"
@@ -156,6 +165,7 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                 onclick: move |_| cx.spawn({
                     to_owned![w_exercise_set_name, w_exercise_set_reps, auth_token];
                     let fetch_names = cx.props.fetch_names.clone();
+                    let display_message = cx.props.display_message.clone();
                     
                     async move {
                         let client = reqwest::Client::new();
@@ -174,6 +184,10 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                             }
 
                             fetch_names.send(c::main_page::FetchNames);
+                            display_message.send(UIMessage::info(format!("Added exercise \"{}\" x {}",
+                                w_exercise_set_name.current(),
+                                w_exercise_set_reps.current()
+                            )));
                         }
                     }
                 }),

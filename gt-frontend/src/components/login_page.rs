@@ -7,11 +7,12 @@ use log::info;
 use crate::{
     api_url,
     auth::{set_auth_token, ACTIVE_AUTH_TOKEN},
+    messages::{MessageProps, UIMessage},
     APP_BASE,
 };
 use gt_core::models::{AuthToken, UserLogin};
 
-pub fn LoginPage(cx: Scope) -> Element {
+pub fn LoginPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
     let router = use_router(&cx);
 

@@ -10,14 +10,15 @@ use crate::components as c;
 use crate::{
     api_url,
     auth::{is_logged_in, ACTIVE_AUTH_TOKEN},
-    APP_BASE,
+    messages::MessageProps,
+    UIMessage, APP_BASE,
 };
 use gt_core::models;
 
 #[derive(Debug, Clone, Copy)]
 pub struct FetchNames;
 
-fn LoggedInMainPage(cx: Scope) -> Element {
+fn LoggedInMainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
     let exercise_names = use_state(&cx, || vec![]);
 
@@ -58,12 +59,14 @@ fn LoggedInMainPage(cx: Scope) -> Element {
         div {
             c::AddExerciseSetWeighted {
                 exercise_names: exercise_names.get().to_owned(),
-                fetch_names: fetch_names
+                fetch_names: fetch_names,
+                display_message: &cx.props.display_message
             }
             br {}
             c::AddExerciseSetBodyweight {
                 exercise_names: exercise_names.get().to_owned(),
-                fetch_names: fetch_names
+                fetch_names: fetch_names,
+                display_message: &cx.props.display_message
             }
         }
     })
@@ -78,11 +81,11 @@ fn LoggedOutMainPage(cx: Scope) -> Element {
     })
 }
 
-pub fn MainPage(cx: Scope) -> Element {
+pub fn MainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     cx.render(rsx! {
         p { "Main page" }
         if is_logged_in(&cx) {
-            rsx!{ LoggedInMainPage {} }
+            rsx!{ LoggedInMainPage { display_message: &cx.props.display_message } }
         } else {
             rsx!{ LoggedOutMainPage {} }
         }

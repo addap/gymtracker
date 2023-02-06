@@ -8,10 +8,11 @@ use log::info;
 use crate::{
     api_url,
     auth::{set_auth_token, ACTIVE_AUTH_TOKEN},
+    messages::{MessageProps, UIMessage},
     APP_BASE,
 };
 
-pub fn RegisterPage(cx: Scope) -> Element {
+pub fn RegisterPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
     let router = use_router(&cx);
 

@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 
 use dioxus::prelude::*;
 
-use crate::{UIMessage, UIMessageType};
+use crate::messages::{UIMessage, UIMessageType};
 
 #[inline_props]
 pub fn Messages<'a>(cx: Scope, ui_messages: &'a UseRef<VecDeque<UIMessage>>) -> Element<'a> {
