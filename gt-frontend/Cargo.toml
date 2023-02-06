@@ -13,6 +13,7 @@ dioxus-router = { version = "0.3.0", features = [ "web" ] }
 dioxus-web = "0.3.0"
 fermi = "0.3.0"
 futures-util = "0.3.26"
+gloo-timers = "0.2.6"
 gt-core = { path = "../gt-core" }
 js-sys = "0.3.60"
 log = "0.4.17"
