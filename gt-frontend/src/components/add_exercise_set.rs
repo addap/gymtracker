@@ -36,83 +36,105 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
 
     cx.render(rsx! {
         div {
-            p { "Weighted Exercise Set" }
-            input {
-                list: "w-exercise-names-list",
-                value: "{w_exercise_set_name}",
-                placeholder: "exercise name",
-                oninput: move |evt| w_exercise_set_name.set(evt.value.clone()),
-            }
-            datalist {
-                id: "w-exercise-names-list",
-                names_datalist
-            }
-            br {}
-            input {
-                id: "w-exercise-set-weight",
-                r#type: "number",
-                value: "{w_exercise_set_weight}",
-                step: "any",
-                oninput: move |evt| {
-                    if let Ok(v) = evt.value.parse() {
-                        w_exercise_set_weight.set(v)
-                    }
+            div {
+                class: "row",
+                p { 
+                    class: "col-12",
+                    "Weighted Exercise Set" 
                 }
             }
-            label {
-                r#for: "w-exercise-set-weight",
-                " kg"
-            }
-            br {}
-            input {
-                id: "w-exercise-set-reps",
-                r#type: "number",
-                min: "1",
-                value: "{w_exercise_set_reps}",
-                oninput: move |evt| {
-                    if let Ok(v) = evt.value.parse() {
-                        w_exercise_set_reps.set(v)
+            div {
+                class: "row",
+                div {
+                    class: "col",
+                    input {
+                        list: "w-exercise-names-list",
+                        value: "{w_exercise_set_name}",
+                        placeholder: "exercise name",
+                        oninput: move |evt| w_exercise_set_name.set(evt.value.clone()),
+                    }
+                    datalist {
+                        id: "w-exercise-names-list",
+                        names_datalist
                     }
                 }
-            }
-            label {
-                r#for: "w-exercise-set-reps",
-                " reps"
-            }
-            br {}
-            button {
-                onclick: move |_| cx.spawn({
-                    to_owned![w_exercise_set_name, w_exercise_set_reps, w_exercise_set_weight, auth_token];
-                    let fetch_names = cx.props.fetch_names.clone();
-                    let display_message = cx.props.display_message.clone();
-                    
-                    async move {
-                        let client = reqwest::Client::new();
-                        
-                        if !w_exercise_set_name.current().is_empty() {
-                            let exs: models::ExerciseSet = (models::ExerciseSetWeighted {
-                                name: (*w_exercise_set_name.current()).clone(),
-                                reps: *w_exercise_set_reps.current(),
-                                weight: *w_exercise_set_weight.current(),
-                            }).into();
-
-                            let res = client.post(api_url("/exercise/set")).json(&exs).bearer_auth(auth_token.unwrap_or("".into()))
-                                .send().await;
-                            if let Err(ref e) = res {
-                                info!("{}", e);
-                                return;
+                div {
+                    class: "col",
+                    input {
+                        id: "w-exercise-set-weight",
+                        r#type: "number",
+                        value: "{w_exercise_set_weight}",
+                        step: "any",
+                        oninput: move |evt| {
+                            if let Ok(v) = evt.value.parse() {
+                                w_exercise_set_weight.set(v)
                             }
-
-                            fetch_names.send(c::main_page::FetchNames);
-                            display_message.send(UIMessage::info(format!("Added exercise \"{}\" x{} ({}kg)",
-                                w_exercise_set_name.current(),
-                                w_exercise_set_reps.current(),
-                                w_exercise_set_weight.current()
-                            )));
                         }
                     }
-                }),
-                "+"
+                    label {
+                        r#for: "w-exercise-set-weight",
+                        " kg"
+                    }
+                }
+                div {
+                    class: "col",
+                    input {
+                        id: "w-exercise-set-reps",
+                        r#type: "number",
+                        min: "1",
+                        value: "{w_exercise_set_reps}",
+                        oninput: move |evt| {
+                            if let Ok(v) = evt.value.parse() {
+                                w_exercise_set_reps.set(v)
+                            }
+                        }
+                    }
+                    label {
+                        r#for: "w-exercise-set-reps",
+                        " reps"
+                    }
+                }
+            }
+            div {
+                class: "row",
+                div {
+                    class: "col-6",
+                    button {
+                        class: "btn btn-outline-success",
+                        onclick: move |_| cx.spawn({
+                            to_owned![w_exercise_set_name, w_exercise_set_reps, w_exercise_set_weight, auth_token];
+                            let fetch_names = cx.props.fetch_names.clone();
+                            let display_message = cx.props.display_message.clone();
+                            
+                            async move {
+                                let client = reqwest::Client::new();
+                                
+                                if !w_exercise_set_name.current().is_empty() {
+                                    let exs: models::ExerciseSet = (models::ExerciseSetWeighted {
+                                        name: (*w_exercise_set_name.current()).clone(),
+                                        reps: *w_exercise_set_reps.current(),
+                                        weight: *w_exercise_set_weight.current(),
+                                    }).into();
+
+                                    let res = client.post(api_url("/exercise/set")).json(&exs).bearer_auth(auth_token.unwrap_or("".into()))
+                                        .send().await;
+                                    if let Err(ref e) = res {
+                                        info!("{}", e);
+                                        return;
+                                    }
+
+                                    fetch_names.send(c::main_page::FetchNames);
+                                    display_message.send(UIMessage::info(format!("Added exercise \"{}\" x{} ({}kg)",
+                                        w_exercise_set_name.current(),
+                                        w_exercise_set_reps.current(),
+                                        w_exercise_set_weight.current()
+                                    )));
+                                }
+                            }
+                        }),
+                        "+"
+                    }
+                }
             }
         }
     })
@@ -133,65 +155,82 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
 
     cx.render(rsx! {
         div {
-            p { "Bodyweight Exercise Set" }
-            input {
-                list: "b-exercise-names-list",
-                value: "{w_exercise_set_name}",
-                placeholder: "exercise name",
-                oninput: move |evt| w_exercise_set_name.set(evt.value.clone()),
+            div {
+                class: "row",
+                p { "Bodyweight Exercise Set" }
             }
-            datalist {
-                id: "b-exercise-names-list",
-                names_datalist
-            }
-            br {}
-            input {
-                id: "b-exercise-set-reps",
-                r#type: "number",
-                min: "1",
-                value: "{w_exercise_set_reps}",
-                oninput: move |evt| {
-                    if let Ok(v) = evt.value.parse() {
-                        w_exercise_set_reps.set(v)
+            div {
+                class: "row",
+                div {
+                    class: "col",
+                    input {
+                        list: "b-exercise-names-list",
+                        value: "{w_exercise_set_name}",
+                        placeholder: "exercise name",
+                        oninput: move |evt| w_exercise_set_name.set(evt.value.clone()),
+                    }
+                    datalist {
+                        id: "b-exercise-names-list",
+                        names_datalist
+                    }
+                }
+                div {
+                    class: "col",
+                    input {
+                        id: "b-exercise-set-reps",
+                        r#type: "number",
+                        min: "1",
+                        value: "{w_exercise_set_reps}",
+                        oninput: move |evt| {
+                            if let Ok(v) = evt.value.parse() {
+                                w_exercise_set_reps.set(v)
+                            }
+                        }
+                    }
+                    label {
+                        r#for: "b-exercise-set-reps",
+                        " reps"
                     }
                 }
             }
-            label {
-                r#for: "b-exercise-set-reps",
-                " reps"
-            }
-            br {}
-            button {
-                onclick: move |_| cx.spawn({
-                    to_owned![w_exercise_set_name, w_exercise_set_reps, auth_token];
-                    let fetch_names = cx.props.fetch_names.clone();
-                    let display_message = cx.props.display_message.clone();
-                    
-                    async move {
-                        let client = reqwest::Client::new();
-                        
-                        if !w_exercise_set_name.current().is_empty() {
-                            let exs: models::ExerciseSet = (models::ExerciseSetBodyweight {
-                                name: (*w_exercise_set_name.current()).clone(),
-                                reps: *w_exercise_set_reps.current(),
-                            }).into();
+            div {
+                class: "row",
+                div {
+                    class: "col-6",
+                    button {
+                        class: "btn btn-outline-success",
+                        onclick: move |_| cx.spawn({
+                            to_owned![w_exercise_set_name, w_exercise_set_reps, auth_token];
+                            let fetch_names = cx.props.fetch_names.clone();
+                            let display_message = cx.props.display_message.clone();
+                            
+                            async move {
+                                let client = reqwest::Client::new();
+                                
+                                if !w_exercise_set_name.current().is_empty() {
+                                    let exs: models::ExerciseSet = (models::ExerciseSetBodyweight {
+                                        name: (*w_exercise_set_name.current()).clone(),
+                                        reps: *w_exercise_set_reps.current(),
+                                    }).into();
 
-                            let res = client.post(api_url("/exercise/set")).json(&exs).bearer_auth(auth_token.unwrap_or("".into()))
-                                .send().await;
-                            if let Err(ref e) = res {
-                                info!("{}", e);
-                                return;
+                                    let res = client.post(api_url("/exercise/set")).json(&exs).bearer_auth(auth_token.unwrap_or("".into()))
+                                        .send().await;
+                                    if let Err(ref e) = res {
+                                        info!("{}", e);
+                                        return;
+                                    }
+
+                                    fetch_names.send(c::main_page::FetchNames);
+                                    display_message.send(UIMessage::info(format!("Added exercise \"{}\" x {}",
+                                        w_exercise_set_name.current(),
+                                        w_exercise_set_reps.current()
+                                    )));
+                                }
                             }
-
-                            fetch_names.send(c::main_page::FetchNames);
-                            display_message.send(UIMessage::info(format!("Added exercise \"{}\" x {}",
-                                w_exercise_set_name.current(),
-                                w_exercise_set_reps.current()
-                            )));
-                        }
+                        }),
+                        "+"
                     }
-                }),
-                "+"
+                }
             }
         }
     })

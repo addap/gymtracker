@@ -43,14 +43,14 @@ pub fn Logout(cx: Scope) -> Element {
 
     cx.render(rsx! {
         div {
-            input {
+            button {
+                class: "btn btn-outline-danger",
                 id: "logout-btn",
                 name: "logout-btn",
-                r#type: "button",
-                value: "Logout",
                 onclick: move |_| {
                     set_auth_token(auth_setter, None);
-                }
+                },
+                "Logout"
             }
         }
     })

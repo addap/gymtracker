@@ -57,6 +57,7 @@ fn LoggedInMainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
     cx.render(rsx! {
         div {
+            class: "row",
             c::AddExerciseSetWeighted {
                 exercise_names: exercise_names.get().to_owned(),
                 fetch_names: fetch_names,
@@ -83,11 +84,16 @@ fn LoggedOutMainPage(cx: Scope) -> Element {
 
 pub fn MainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     cx.render(rsx! {
-        p { "Main page" }
-        if is_logged_in(&cx) {
-            rsx!{ LoggedInMainPage { display_message: &cx.props.display_message } }
-        } else {
-            rsx!{ LoggedOutMainPage {} }
+        div {
+            p {
+                class: "row",
+                "Main page"
+            }
+            if is_logged_in(&cx) {
+                rsx!{ LoggedInMainPage { display_message: &cx.props.display_message } }
+            } else {
+                rsx!{ LoggedOutMainPage {} }
+            }
         }
     })
 }

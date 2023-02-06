@@ -56,17 +56,20 @@ pub fn app(cx: Scope) -> Element {
     });
 
     cx.render(rsx! {
-        Router {
-            base_url: APP_BASE,
-            c::Navbar {}
-            c::Messages { ui_messages: ui_messages }
-            p { BANNER.clone() }
-            Route { to: "/login", c::LoggedOut{ c::LoginPage { display_message: display_message } }}
-            Route { to: "/register", c::LoggedOut {  c::RegisterPage { display_message: display_message }  }}
-            Route { to: "/history", c::LoggedIn { c::HistoryPage {} }}
-            Route { to: "/pr", c::LoggedIn { c::PRPage {} }}
-            Route { to: "/stats", c::LoggedIn { c::StatsPage {} }}
-            Route { to: "", c::MainPage { display_message: display_message } }
+        div {
+            class: "container-fluid",
+            Router {
+                base_url: APP_BASE,
+                c::Navbar {}
+                c::Messages { ui_messages: ui_messages }
+                p { BANNER.clone() }
+                Route { to: "/login", c::LoggedOut{ c::LoginPage { display_message: display_message } }}
+                Route { to: "/register", c::LoggedOut {  c::RegisterPage { display_message: display_message }  }}
+                Route { to: "/history", c::LoggedIn { c::HistoryPage {} }}
+                Route { to: "/pr", c::LoggedIn { c::PRPage {} }}
+                Route { to: "/stats", c::LoggedIn { c::StatsPage {} }}
+                Route { to: "", c::MainPage { display_message: display_message } }
+            }
         }
     })
 }
