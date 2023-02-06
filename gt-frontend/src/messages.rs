@@ -28,4 +28,11 @@ impl UIMessage {
             message,
         }
     }
+
+    pub fn server_error() -> Self {
+        Self {
+            r#type: UIMessageType::Error,
+            message: "Connection to Server".to_string(),
+        }
+    }
 }

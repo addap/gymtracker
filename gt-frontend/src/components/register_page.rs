@@ -89,23 +89,32 @@ pub fn RegisterPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                         }
 
                         let client = reqwest::Client::new();
-                        let res = client.post(api_url("/user/register")).json(&UserSignup {
+                        let req = client.post(api_url("/user/register")).json(&UserSignup {
                             username: (*username.current()).clone(),
                             password: (*password.current()).clone(),
                             display_name: (*display_name.current()).clone(),
                             email: (*email.current()).clone(),
                         }).send().await;
 
-                        if let Err(ref e) = res {
-                            info!("{}", e);
-                            display_message.send(UIMessage::error("Registration failed.".to_string()));
-                            return;
+                        match req {
+                            Ok(res) => {
+                                match res.json::<AuthToken>().await {
+                                    Ok(token) => {
+                                        info!("{:?}", token);
+                                        set_auth_token(&auth_setter, Some(token));
+                                        router.navigate_to(APP_BASE);
+                                    }
+                                    Err(e) => {
+                                        info!("{}", e);
+                                        display_message.send(UIMessage::error("Registration failed".to_string()));
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                info!("{}", e);
+                                display_message.send(UIMessage::server_error());
+                            }
                         }
-                        let token = res.unwrap().json::<AuthToken>().await.unwrap();
-
-                        info!("{:?}", token);
-                        set_auth_token(&auth_setter, Some(token));
-                        router.navigate_to(APP_BASE);
                     }
                 }),
                 "Register",

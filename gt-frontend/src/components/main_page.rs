@@ -73,13 +73,7 @@ fn LoggedInMainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     })
 }
 fn LoggedOutMainPage(cx: Scope) -> Element {
-    cx.render(rsx! {
-        div {
-            Link { to: concatcp!(APP_BASE, "/register"), "Register" }
-            br {}
-            Link { to: concatcp!(APP_BASE, "/login"), "Login" }
-        }
-    })
+    None
 }
 
 pub fn MainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
@@ -96,8 +90,6 @@ pub fn MainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             }
             if is_logged_in(&cx) {
                 rsx!{ LoggedInMainPage { display_message: &cx.props.display_message } }
-            } else {
-                rsx!{ LoggedOutMainPage {} }
             }
         }
     })

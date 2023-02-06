@@ -15,24 +15,65 @@ pub fn Navbar(cx: Scope) -> Element {
                     nav {
                         class: "navbar navbar-expand-lg bg-body-tertiary",
                         div {
-                            class: "container-fluid",
+                            // class: "navbar-collapse collapse w-100",
                             div {
-                                class: "nav-link",
-                                c::Logout {}
-                            }
-                            div {
-                                class: "nav-link",
-                                Link { to: concatcp!(APP_BASE, "/"), "Home" }
-                            }
-                            div {
-                                class: "nav-link",
-                                Link { to: concatcp!(APP_BASE, "/history"), "History" }
-                            }
-                            div {
-                                class: "nav-link",
-                                Link { to: concatcp!(APP_BASE, "/pr"), "PR" }
+                                class: "navbar-nav me-auto",
+                                div {
+                                    class: "nav-item",
+                                    div {
+                                        class: "nav-link",
+                                        c::Logout {}
+                                    }
+                                }
+                                div {
+                                    class: "nav-item",
+                                    Link {
+                                        class: "nav-link",
+                                        to: concatcp!(APP_BASE, "/"), "Home"
+                                    }
+                                }
+                                div {
+                                    class: "nav-item",
+                                    Link {
+                                        class: "nav-link",
+                                        to: concatcp!(APP_BASE, "/history"), "History"
+                                    }
+                                }
+                                div {
+                                    class: "nav-item",
+                                    Link {
+                                        class: "nav-link",
+                                        to: concatcp!(APP_BASE, "/pr"), "PR"
+                                    }
+                                }
                             }
                         }
+                    }
+                }
+            } else {
+                rsx!{
+                    nav {
+                        class: "navbar navbar-expand-lg bg-body-tertiary",
+                        // div {
+                        //     class: "navbar-collapse collapse w-100",
+                            div {
+                                class: "navbar-nav me-auto",
+                                div {
+                                    class: "nav-item",
+                                    Link {
+                                        class: "nav-link",
+                                        to: concatcp!(APP_BASE, "/register"), "Register"
+                                    }
+                                }
+                                div {
+                                    class: "nav-item",
+                                    Link {
+                                        class: "nav-link",
+                                        to: concatcp!(APP_BASE, "/login"), "Login"
+                                    }
+                                }
+                            }
+                        // }
                     }
                 }
             }
