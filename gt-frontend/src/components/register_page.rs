@@ -2,13 +2,14 @@
 use dioxus::prelude::*;
 use dioxus_router::use_router;
 use fermi::use_set;
-use gt_core::models::{AuthToken, UserSignup};
+use gt_core::models::UserSignup;
 use log::info;
 
 use crate::{
     api_url,
     auth::{set_auth_token, ACTIVE_AUTH_TOKEN},
     messages::{MessageProps, UIMessage},
+    request_ext::RequestExt,
     APP_BASE,
 };
 
@@ -89,31 +90,20 @@ pub fn RegisterPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                         }
 
                         let client = reqwest::Client::new();
-                        let req = client.post(api_url("/user/register")).json(&UserSignup {
+                        let res = client.post(api_url("/user/register")).json(&UserSignup {
                             username: (*username.current()).clone(),
                             password: (*password.current()).clone(),
                             display_name: (*display_name.current()).clone(),
                             email: (*email.current()).clone(),
-                        }).send().await;
+                        }).send().await
+                        .handle_result(UIMessage::error("Registration failed".to_string())).await;
 
-                        match req {
-                            Ok(res) => {
-                                match res.json::<AuthToken>().await {
-                                    Ok(token) => {
-                                        info!("{:?}", token);
-                                        set_auth_token(&auth_setter, Some(token));
-                                        router.navigate_to(APP_BASE);
-                                    }
-                                    Err(e) => {
-                                        info!("{}", e);
-                                        display_message.send(UIMessage::error("Registration failed".to_string()));
-                                    }
-                                }
+                        match res {
+                            Ok(token) => {
+                                set_auth_token(&auth_setter, Some(token));
+                                router.navigate_to(APP_BASE);
                             }
-                            Err(e) => {
-                                info!("{}", e);
-                                display_message.send(UIMessage::server_error());
-                            }
+                            Err(e) => display_message.send(e)
                         }
                     }
                 }),

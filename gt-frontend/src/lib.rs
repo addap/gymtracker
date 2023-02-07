@@ -1,11 +1,14 @@
+#![feature(async_fn_in_trait)]
+
 mod auth;
 mod components;
 mod messages;
+mod request_ext;
 
 use std::collections::VecDeque;
 
 use auth::{init_auth_token, ACTIVE_AUTH_TOKEN};
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
 use dioxus_router::{Route, Router};
 use fermi::{use_init_atom_root, use_set};
@@ -13,7 +16,6 @@ use futures_util::StreamExt;
 use gloo_timers::future::TimeoutFuture;
 use lazy_static::lazy_static;
 use log::info;
-use serde_json::to_vec_pretty;
 use wasm_bindgen::prelude::*;
 
 use components as c;
@@ -27,8 +29,8 @@ extern "C" {
 }
 
 lazy_static! {
-    static ref BANNER: String = unsafe { JS_BANNER.clone() };
-    static ref MESSAGE_TIMEOUT: i64 = unsafe { JS_MESSAGE_TIMEOUT.clone() as i64 };
+    static ref BANNER: String = JS_BANNER.clone();
+    static ref MESSAGE_TIMEOUT: i64 = JS_MESSAGE_TIMEOUT.clone() as i64;
 }
 
 fn api_url(endpoint: &str) -> String {
@@ -64,8 +66,9 @@ pub fn app(cx: Scope) -> Element {
 
         async move {
             while let Some(ui_msg) = rx.next().await {
+                let timeout = ui_msg.timeout;
                 ui_messages.write().push_back(ui_msg);
-                let delete_at = Utc::now() + Duration::milliseconds(*MESSAGE_TIMEOUT);
+                let delete_at = Utc::now() + timeout;
                 cleanup_messages.send(delete_at);
             }
         }
@@ -81,8 +84,8 @@ pub fn app(cx: Scope) -> Element {
                 p { BANNER.clone() }
                 Route { to: "/login", c::LoggedOut{ c::LoginPage { display_message: display_message } }}
                 Route { to: "/register", c::LoggedOut {  c::RegisterPage { display_message: display_message }  }}
-                Route { to: "/history", c::LoggedIn { c::HistoryPage {} }}
-                Route { to: "/pr", c::LoggedIn { c::PRPage {} }}
+                Route { to: "/history", c::LoggedIn { c::HistoryPage { display_message: display_message } }}
+                Route { to: "/pr", c::LoggedIn { c::PRPage { display_message: display_message } }}
                 Route { to: "/stats", c::LoggedIn { c::StatsPage {} }}
                 Route { to: "", c::MainPage { display_message: display_message } }
             }

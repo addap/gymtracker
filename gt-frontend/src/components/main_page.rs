@@ -1,17 +1,16 @@
 #![allow(non_snake_case)]
-use const_format::concatcp;
 use dioxus::prelude::*;
-use dioxus_router::Link;
 use fermi::use_read;
 use futures_util::StreamExt;
 use log::info;
 
 use crate::components as c;
+use crate::request_ext::RequestExt;
 use crate::{
     api_url,
     auth::{is_logged_in, ACTIVE_AUTH_TOKEN},
     messages::MessageProps,
-    UIMessage, APP_BASE,
+    UIMessage,
 };
 use gt_core::models;
 
@@ -25,6 +24,7 @@ fn LoggedInMainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let fetch_names = use_coroutine(&cx, |mut rx: UnboundedReceiver<FetchNames>| {
         to_owned![auth_token, exercise_names];
         let empty_auth_token: models::AuthToken = "".into();
+        let display_message = cx.props.display_message.clone();
 
         async move {
             while let Some(FetchNames) = rx.next().await {
@@ -34,19 +34,16 @@ fn LoggedInMainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     .get(api_url("/exercise/name"))
                     .bearer_auth(token)
                     .send()
+                    .await
+                    .handle_result(UIMessage::error(
+                        "Fetching exercise names failed.".to_string(),
+                    ))
                     .await;
 
-                if let Err(ref e) = res {
-                    info!("{}", e);
-                    return;
+                match res {
+                    Ok(names) => exercise_names.set(names),
+                    Err(e) => display_message.send(e),
                 }
-                let names = res
-                    .unwrap()
-                    .json::<Vec<models::ExerciseName>>()
-                    .await
-                    .unwrap();
-
-                exercise_names.set(names);
             }
         }
     });

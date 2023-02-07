@@ -5,13 +5,16 @@ use gt_core::models;
 use log::info;
 
 use crate::components as c;
+use crate::messages::{MessageProps, UIMessage};
+use crate::request_ext::RequestExt;
 use crate::{api_url, auth::ACTIVE_AUTH_TOKEN};
 
-pub fn HistoryPage(cx: Scope) -> Element {
+pub fn HistoryPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
 
     let fetch = use_future(&cx, (), |()| {
         to_owned![auth_token];
+        let display_message = cx.props.display_message.clone();
 
         async move {
             let client = reqwest::Client::new();
@@ -19,19 +22,19 @@ pub fn HistoryPage(cx: Scope) -> Element {
                 .get(api_url("/exercise/set"))
                 .bearer_auth(auth_token.unwrap_or("".into()))
                 .send()
+                .await
+                .handle_result(UIMessage::error(
+                    "Requesting exercise history failed.".to_string(),
+                ))
                 .await;
 
-            if let Err(ref e) = res {
-                info!("{}", e);
-                return vec![];
+            match res {
+                Ok(history) => history,
+                Err(e) => {
+                    display_message.send(e);
+                    vec![]
+                }
             }
-            let history = res
-                .unwrap()
-                .json::<Vec<models::ExerciseSetQuery>>()
-                .await
-                .unwrap();
-
-            history
         }
     });
 
