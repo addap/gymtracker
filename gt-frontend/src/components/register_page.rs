@@ -6,7 +6,7 @@ use gt_core::models::UserSignup;
 use log::info;
 
 use crate::{
-    api_url,
+    api,
     auth::{set_auth_token, ACTIVE_AUTH_TOKEN},
     messages::{MessageProps, UIMessage},
     request_ext::RequestExt,
@@ -90,7 +90,7 @@ pub fn RegisterPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                         }
 
                         let client = reqwest::Client::new();
-                        let res = client.post(api_url("/user/register")).json(&UserSignup {
+                        let res = client.post(api::USER_REGISTER.as_str()).json(&UserSignup {
                             username: (*username.current()).clone(),
                             password: (*password.current()).clone(),
                             display_name: (*display_name.current()).clone(),

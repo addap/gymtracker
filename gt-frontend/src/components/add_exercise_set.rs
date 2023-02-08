@@ -4,7 +4,8 @@ use fermi::{use_read, use_atom_state, Atom};
 use log::info;
 
 use crate::{
-    api_url, auth::ACTIVE_AUTH_TOKEN,
+    api,
+    auth::ACTIVE_AUTH_TOKEN,
     messages::UIMessage,
     components as c,
     request_ext::RequestExt,
@@ -117,7 +118,7 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                                         weight: *w_exercise_set_weight.current(),
                                     }).into();
 
-                                    let res = client.post(api_url("/exercise/set"))
+                                    let res = client.post(api::EXERCISE_SET.as_str())
                                         .json(&exs).bearer_auth(auth_token.unwrap_or("".into()))
                                         .send().await
                                         .handle_result(UIMessage::error("Submitting exercise failed.".to_string())).await;
@@ -221,7 +222,7 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                                         reps: *b_exercise_set_reps.current(),
                                     }).into();
 
-                                    let res = client.post(api_url("/exercise/set"))
+                                    let res = client.post(api::EXERCISE_SET.as_str())
                                         .json(&exs).bearer_auth(auth_token.unwrap_or("".into()))
                                         .send().await
                                         .handle_result(UIMessage::error("Submitting exercise failed.".to_string())).await;

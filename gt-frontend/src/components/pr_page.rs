@@ -6,7 +6,7 @@ use log::info;
 
 use crate::messages::{MessageProps, UIMessage};
 use crate::request_ext::RequestExt;
-use crate::{api_url, auth::ACTIVE_AUTH_TOKEN};
+use crate::{api, auth::ACTIVE_AUTH_TOKEN};
 
 pub fn PRPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
@@ -18,7 +18,7 @@ pub fn PRPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         async move {
             let client = reqwest::Client::new();
             let res = client
-                .get(api_url("/exercise/pr"))
+                .get(api::EXERCISE_PR.as_str())
                 .bearer_auth(auth_token.unwrap_or("".into()))
                 .send()
                 .await

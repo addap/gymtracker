@@ -5,7 +5,7 @@ use fermi::use_set;
 use log::info;
 
 use crate::{
-    api_url,
+    api,
     auth::{set_auth_token, ACTIVE_AUTH_TOKEN},
     messages::{MessageProps, UIMessage},
     request_ext::RequestExt,
@@ -51,7 +51,7 @@ pub fn LoginPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                         }
 
                         let client = reqwest::Client::new();
-                        let res = client.post(api_url("/user/login"))
+                        let res = client.post(api::USER_LOGIN.as_str())
                             .json(&UserLogin {
                                 username: (*username.current()).clone(),
                                 password: (*password.current()).clone(),

@@ -1,5 +1,6 @@
 #![feature(async_fn_in_trait)]
 
+mod api;
 mod auth;
 mod components;
 mod messages;
@@ -31,11 +32,6 @@ extern "C" {
 lazy_static! {
     static ref BANNER: String = JS_BANNER.clone();
     static ref MESSAGE_TIMEOUT: i64 = JS_MESSAGE_TIMEOUT.clone() as i64;
-}
-
-fn api_url(endpoint: &str) -> String {
-    let base = web_sys::window().unwrap().origin();
-    base + "/api" + endpoint
 }
 
 pub fn app(cx: Scope) -> Element {

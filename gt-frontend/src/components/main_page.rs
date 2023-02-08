@@ -7,7 +7,7 @@ use log::info;
 use crate::components as c;
 use crate::request_ext::RequestExt;
 use crate::{
-    api_url,
+    api,
     auth::{is_logged_in, ACTIVE_AUTH_TOKEN},
     messages::MessageProps,
     UIMessage,
@@ -31,7 +31,7 @@ fn LoggedInMainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 let token: &models::AuthToken = auth_token.as_ref().unwrap_or(&empty_auth_token);
                 let client = reqwest::Client::new();
                 let res = client
-                    .get(api_url("/exercise/name"))
+                    .get(api::EXERCISE_NAME.as_str())
                     .bearer_auth(token)
                     .send()
                     .await
