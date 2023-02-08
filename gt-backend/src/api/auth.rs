@@ -4,6 +4,7 @@ use axum::headers::authorization::Bearer;
 use axum::headers::Authorization;
 use axum::middleware::Next;
 use axum::response::Response;
+use axum::Json;
 use chrono::Utc;
 use hmac::{Hmac, Mac};
 use hyper::Request;
@@ -60,4 +61,8 @@ pub async fn auth_middleware<B>(
     let response = next.run(request).await;
 
     Ok(response)
+}
+
+pub async fn check_token() -> Result<Json<()>> {
+    Ok(Json(()))
 }

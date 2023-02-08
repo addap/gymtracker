@@ -2,16 +2,16 @@
 use dioxus::prelude::*;
 use dioxus_router::use_router;
 use fermi::use_set;
-use gt_core::models::UserSignup;
 use log::info;
 
 use crate::{
     api,
-    auth::{set_auth_token, ACTIVE_AUTH_TOKEN},
+    auth::{store_auth_token, ACTIVE_AUTH_TOKEN},
     messages::{MessageProps, UIMessage},
     request_ext::RequestExt,
     APP_BASE,
 };
+use gt_core::models::{UserSignup, AuthToken};
 
 pub fn RegisterPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
@@ -96,11 +96,12 @@ pub fn RegisterPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                             display_name: (*display_name.current()).clone(),
                             email: (*email.current()).clone(),
                         }).send().await
-                        .handle_result(UIMessage::error("Registration failed".to_string())).await;
+                        .handle_result::<AuthToken>(UIMessage::error("Registration failed".to_string())).await;
 
                         match res {
                             Ok(token) => {
-                                set_auth_token(&auth_setter, Some(token));
+                                auth_setter(Some(token.clone()));
+                                store_auth_token(Some(token));
                                 router.navigate_to(APP_BASE);
                             }
                             Err(e) => display_message.send(e)

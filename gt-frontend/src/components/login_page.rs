@@ -6,12 +6,12 @@ use log::info;
 
 use crate::{
     api,
-    auth::{set_auth_token, ACTIVE_AUTH_TOKEN},
+    auth::{store_auth_token, ACTIVE_AUTH_TOKEN},
     messages::{MessageProps, UIMessage},
     request_ext::RequestExt,
     APP_BASE,
 };
-use gt_core::models::UserLogin;
+use gt_core::models::{AuthToken, UserLogin};
 
 pub fn LoginPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
@@ -56,11 +56,12 @@ pub fn LoginPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                                 username: (*username.current()).clone(),
                                 password: (*password.current()).clone(),
                             }).send().await
-                            .handle_result(UIMessage::error("Login failed".to_string())).await;
+                            .handle_result::<AuthToken>(UIMessage::error("Login failed".to_string())).await;
 
                         match res {
                             Ok(token) => {
-                                set_auth_token(&auth_setter, Some(token));
+                                auth_setter(Some(token.clone()));
+                                store_auth_token(Some(token));
                                 router.navigate_to(APP_BASE);
                             }
                             Err(e) => display_message.send(e)

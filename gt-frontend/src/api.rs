@@ -11,4 +11,5 @@ lazy_static! {
     pub static ref EXERCISE_PR: String = api_url("/exercise/pr");
     pub static ref USER_LOGIN: String = api_url("/user/login");
     pub static ref USER_REGISTER: String = api_url("/user/register");
+    pub static ref AUTH_CHECK: String = api_url("/auth/check");
 }

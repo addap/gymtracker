@@ -2,7 +2,7 @@
 use dioxus::prelude::*;
 use fermi::use_set;
 
-use crate::auth::{is_logged_in, set_auth_token, ACTIVE_AUTH_TOKEN};
+use crate::auth::{is_logged_in, store_auth_token, ACTIVE_AUTH_TOKEN};
 
 #[derive(Props)]
 pub struct AccessControlProps<'a> {
@@ -48,7 +48,8 @@ pub fn Logout(cx: Scope) -> Element {
                 id: "logout-btn",
                 name: "logout-btn",
                 onclick: move |_| {
-                    set_auth_token(auth_setter, None);
+                    auth_setter(None);
+                    store_auth_token(None);
                 },
                 "Logout"
             }

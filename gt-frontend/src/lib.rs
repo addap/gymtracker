@@ -8,11 +8,11 @@ mod request_ext;
 
 use std::collections::VecDeque;
 
-use auth::{init_auth_token, ACTIVE_AUTH_TOKEN};
+use auth::init_auth_token;
 use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
 use dioxus_router::{Route, Router};
-use fermi::{use_init_atom_root, use_set};
+use fermi::use_init_atom_root;
 use futures_util::StreamExt;
 use gloo_timers::future::TimeoutFuture;
 use lazy_static::lazy_static;
@@ -36,9 +36,7 @@ lazy_static! {
 
 pub fn app(cx: Scope) -> Element {
     use_init_atom_root(&cx);
-
-    let setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
-    init_auth_token(setter);
+    init_auth_token(&cx);
 
     // Coroutine to display messages to the user.
     // Handler is passed to all components that need it.

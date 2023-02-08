@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use fermi::use_read;
-use gt_core::models;
 use log::info;
 
 use crate::components as c;

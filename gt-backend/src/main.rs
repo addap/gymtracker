@@ -68,6 +68,7 @@ async fn main() -> anyhow::Result<()> {
             get(api::user::get_user_info_ts).post(api::user::add_user_info_ts),
         )
         .route("/user/logout", post(api::user::logout))
+        .route("/auth/check", post(api::auth::check_token))
         .layer(token_auth);
 
     let app = Router::new()
