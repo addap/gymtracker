@@ -14,6 +14,7 @@ pub fn is_logged_in<'a, T>(cx: &Scope<'a, T>) -> bool {
 }
 
 pub fn init_auth_token(cx: &Scope) {
+    let setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
     let stored_token = window()
         .unwrap()
         .local_storage()
@@ -29,7 +30,6 @@ pub fn init_auth_token(cx: &Scope) {
             let client = reqwest::Client::new();
 
             let request = client.post(api::AUTH_CHECK.as_str()).bearer_auth(token);
-            let setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
             to_owned![setter];
 
             async move {
