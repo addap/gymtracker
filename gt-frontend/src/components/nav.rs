@@ -15,35 +15,47 @@ pub fn Navbar(cx: Scope) -> Element {
                     nav {
                         class: "navbar navbar-expand-lg bg-body-tertiary",
                         div {
-                            // class: "navbar-collapse collapse w-100",
+                            class: "container-fluid",
+                            button {
+                                class: "navbar-toggler",
+                                "data-bs-toggle": "collapse",
+                                "data-bs-target": "#navbarSupportedContent",
+                                span {
+                                    class: "navbar-toggler-icon"
+                                }
+                            }
                             div {
-                                class: "navbar-nav me-auto",
+                                class: "navbar-collapse collapse",
+                                id: "navbarSupportedContent",
                                 div {
-                                    class: "nav-item",
+                                    class: "navbar-nav me-auto mb-2 mb-lg-0",
                                     div {
-                                        class: "nav-link",
-                                        c::Logout {}
+                                        class: "nav-item",
+                                        div {
+                                            class: "nav-link",
+                                            c::Logout {}
+                                        }
                                     }
-                                }
-                                div {
-                                    class: "nav-item",
-                                    Link {
-                                        class: "nav-link",
-                                        to: concatcp!(APP_BASE, "/"), "Home"
+                                    div {
+                                        class: "nav-item",
+                                        Link {
+                                            class: "nav-link",
+                                            to: concatcp!(APP_BASE, "/"), "Home"
+                                        }
                                     }
-                                }
-                                div {
-                                    class: "nav-item",
-                                    Link {
-                                        class: "nav-link",
-                                        to: concatcp!(APP_BASE, "/history"), "History"
+                                    div {
+                                        class: "nav-item",
+                                        Link {
+                                            class: "nav-link",
+                                            to: concatcp!(APP_BASE, "/history"), "History"
+                                        }
                                     }
-                                }
-                                div {
-                                    class: "nav-item",
-                                    Link {
-                                        class: "nav-link",
-                                        to: concatcp!(APP_BASE, "/pr"), "PR"
+                                    div {
+                                        class: "nav-item",
+                                        Link {
+                                            class: "nav-link",
+                                            to: concatcp!(APP_BASE, "/pr"), "PR"
+                                        }
                                     }
                                 }
                             }
