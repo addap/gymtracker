@@ -1,17 +1,15 @@
 use axum::extract::{Json, State};
 use axum::Extension;
 use chrono::Utc;
-use email_address::EmailAddress;
 use gt_core::models::UserAuth;
 use http::StatusCode;
-use pbkdf2::password_hash::PasswordHash;
 use pbkdf2::{
-    password_hash::{rand_core::OsRng, PasswordHasher, PasswordVerifier, SaltString},
+    password_hash::{PasswordHash, PasswordVerifier},
     Pbkdf2,
 };
 use sea_orm::*;
 
-use crate::{api::auth, AppError, AppState, Result};
+use crate::{api::auth, db, AppError, AppState, Result};
 use gt_core::entities::{prelude::*, *};
 use gt_core::{models, models::AuthToken};
 
@@ -20,42 +18,13 @@ pub async fn register(
     State(state): State<AppState>,
     Json(payload): Json<models::UserSignup>,
 ) -> Result<Json<AuthToken>> {
-    if !EmailAddress::is_valid(&payload.email)
-        || payload.display_name.is_empty()
-        || payload.username.is_empty()
-        || payload.password.is_empty()
-    {
-        return Err(AppError::ValidationError);
-    }
-
-    // Hash password to PHC string ($pbkdf2-sha256$...)
-    let salt = SaltString::generate(&mut OsRng);
-    let pw_hash = Pbkdf2
-        .hash_password(payload.password.as_bytes(), &salt)
-        .map_err(|e| AppError::StatusCode(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-        .to_string();
-
-    let new_user_login = user_login::ActiveModel {
-        username: ActiveValue::Set(payload.username.clone()),
-        email: ActiveValue::Set(payload.email),
-        pw_hash: ActiveValue::Set(pw_hash),
-        created_at: ActiveValue::Set(Utc::now().naive_utc()),
-        ..Default::default()
-    };
-    let new_user = UserLogin::insert(new_user_login).exec(&state.conn).await?;
-
-    let new_user_info = user_info::ActiveModel {
-        display_name: ActiveValue::Set(payload.display_name),
-        user_id: ActiveValue::Set(new_user.last_insert_id),
-        ..Default::default()
-    };
-    UserInfo::insert(new_user_info).exec(&state.conn).await?;
+    let last_insert_id = db::create_user(&payload, false, &state).await?;
 
     let auth_token = auth::create_token(
         &state,
         UserAuth {
             username: payload.username,
-            id: new_user.last_insert_id,
+            id: last_insert_id,
         },
     )?;
 

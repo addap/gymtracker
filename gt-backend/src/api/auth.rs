@@ -4,6 +4,7 @@ use axum::headers::authorization::Bearer;
 use axum::headers::Authorization;
 use axum::middleware::Next;
 use axum::response::Response;
+use axum::Extension;
 use axum::Json;
 use chrono::Utc;
 use hmac::{Hmac, Mac};
@@ -14,7 +15,7 @@ use sha2::Sha256;
 use std::collections::HashMap;
 
 use crate::{AppError, AppState, Result};
-use gt_core::entities::prelude::*;
+use gt_core::entities::{prelude::*, *};
 use gt_core::models::{AuthToken, UserAuth};
 
 pub fn verify_token(state: &AppState, token: AuthToken) -> Result<i32> {
@@ -63,6 +64,21 @@ pub async fn auth_middleware<B>(
     Ok(response)
 }
 
+pub async fn superuser_middleware<B>(
+    Extension(user): Extension<user_login::Model>,
+    request: Request<B>,
+    next: Next<B>,
+) -> Result<Response> {
+    if !user.is_superuser {
+        return Err(AppError::Auth);
+    }
+
+    let response = next.run(request).await;
+
+    Ok(response)
+}
+
+/// Empty endpoint which should be behind the auth middleware so that the client can check the validity of its token.
 pub async fn check_token() -> Result<Json<()>> {
     Ok(Json(()))
 }

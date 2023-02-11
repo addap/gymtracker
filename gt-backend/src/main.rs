@@ -28,14 +28,19 @@ async fn main() -> anyhow::Result<()> {
     let port = env::var("PORT").expect("PORT is not set.");
     let secret = env::var("SECRET").expect("SECRET is not set.");
     let server_url = format!("{}:{}", host, port);
+    let populate_data = db::PopulateData {
+        superuser_name: env::var("SUPERUSER_NAME").expect("SUPERUSER_NAME is not set."),
+        superuser_password: env::var("SUPERUSER_PASSWORD").expect("SUPERUSER_PASSWORD is not set."),
+        superuser_email: env::var("SUPERUSER_EMAIL").expect("SUPERUSER_EMAIL is not set."),
+    };
 
     let conn = Database::connect(db_url).await?;
 
-    // Migrate and populate database
-    Migrator::up(&conn, None).await?;
-    db::populate(&conn).await?;
-
     let state: AppState = Arc::new(InnerAppState { conn, secret });
+
+    // Migrate and populate database
+    Migrator::up(&state.conn, None).await?;
+    db::populate(populate_data, &state).await?;
 
     let unauth_api_routes = Router::new()
         .route("/user/login", post(api::user::login))
@@ -45,7 +50,14 @@ async fn main() -> anyhow::Result<()> {
         state.clone(),
         api::auth::auth_middleware,
     ));
+    let superuser_auth =
+        ServiceBuilder::new().layer(middleware::from_fn(api::auth::superuser_middleware));
     let auth_api_routes = Router::new()
+        .route(
+            "/merge-name/:to-delete/:to-expand",
+            get(api::admin::merge_name),
+        )
+        .layer(superuser_auth)
         .route(
             "/exercise/name",
             get(api::exercise::get_all_exercise_names).post(api::exercise::add_exercise_name),
@@ -69,7 +81,7 @@ async fn main() -> anyhow::Result<()> {
         )
         .route("/user/logout", post(api::user::logout))
         .route("/auth/check", post(api::auth::check_token))
-        .layer(token_auth);
+        .layer(token_auth.clone());
 
     let app = Router::new()
         .merge(frontend_routes())
