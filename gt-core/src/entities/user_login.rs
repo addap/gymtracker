@@ -14,6 +14,7 @@ pub struct Model {
     pub email: String,
     pub pw_hash: String,
     pub created_at: DateTime,
+    pub is_superuser: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

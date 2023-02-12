@@ -12,7 +12,7 @@ impl MigratorTrait for Migrator {
         vec![
             Box::new(m20230113_140607_create_user_table::Migration),
             Box::new(m20230113_140612_create_exercise_table::Migration),
-            // Box::new(m20230212_105435_alter_user_superuser::Migration),
+            Box::new(m20230212_105435_alter_user_superuser::Migration),
         ]
     }
 }
