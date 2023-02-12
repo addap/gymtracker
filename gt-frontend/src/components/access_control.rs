@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
+use dioxus_router::use_router;
 use fermi::use_set;
+use gt_core::APP_BASE;
 
 use crate::auth::{is_logged_in, is_superuser, store_auth_token, ACTIVE_AUTH_TOKEN};
 
@@ -54,6 +56,7 @@ pub fn Superuser<'a>(cx: Scope<'a, AccessControlProps<'a>>) -> Element<'a> {
 
 pub fn Logout(cx: Scope) -> Element {
     let auth_setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
+    let router = use_router(&cx);
 
     cx.render(rsx! {
         div {
@@ -64,6 +67,7 @@ pub fn Logout(cx: Scope) -> Element {
                 onclick: move |_| {
                     auth_setter(None);
                     store_auth_token(None);
+                    router.navigate_to(APP_BASE);
                 },
                 "Logout"
             }
