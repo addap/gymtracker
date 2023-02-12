@@ -32,12 +32,6 @@ impl MigrationTrait for Migration {
                             .unique_key(),
                     )
                     .col(ColumnDef::new(UserLogin::PwHash).string().not_null())
-                    .col(
-                        ColumnDef::new(UserLogin::IsSuperuser)
-                            .boolean()
-                            .not_null()
-                            .default(false),
-                    )
                     .col(ColumnDef::new(UserLogin::CreatedAt).timestamp().not_null())
                     .to_owned(),
             )
@@ -131,7 +125,6 @@ pub enum UserLogin {
     Username,
     Email,
     PwHash,
-    IsSuperuser,
     CreatedAt,
 }
 
