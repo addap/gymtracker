@@ -53,10 +53,7 @@ async fn main() -> anyhow::Result<()> {
     let superuser_auth =
         ServiceBuilder::new().layer(middleware::from_fn(api::auth::superuser_middleware));
     let auth_api_routes = Router::new()
-        .route(
-            "/merge-name/:to-delete/:to-expand",
-            get(api::admin::merge_name),
-        )
+        .route("/admin/merge-names", post(api::admin::merge_names))
         .layer(superuser_auth)
         .route(
             "/exercise/name",

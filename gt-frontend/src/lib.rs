@@ -84,6 +84,7 @@ pub fn app(cx: Scope) -> Element {
                 p { BANNER.clone() }
                 Route { to: "/login", c::LoggedOut{ c::LoginPage { display_message: display_message } }}
                 Route { to: "/register", c::LoggedOut {  c::RegisterPage { display_message: display_message }  }}
+                Route { to: "/admin", c::Superuser { c::AdminPage { display_message: display_message } }}
                 Route { to: "/history", c::LoggedIn { c::HistoryPage { display_message: display_message } }}
                 Route { to: "/pr", c::LoggedIn { c::PRPage { display_message: display_message } }}
                 Route { to: "/stats", c::LoggedIn { c::StatsPage {} }}

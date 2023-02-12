@@ -8,6 +8,11 @@ use crate::{api, messages::UIMessage, request_ext::RequestExt};
 
 pub static ACTIVE_AUTH_TOKEN: Atom<Option<AuthToken>> = |_| None;
 
+pub fn is_superuser<'a, T>(cx: &Scope<'a, T>) -> bool {
+    true
+}
+
+// TODO verify token using api
 pub fn is_logged_in<'a, T>(cx: &Scope<'a, T>) -> bool {
     let auth_token = use_read(cx, ACTIVE_AUTH_TOKEN);
     auth_token.is_some()

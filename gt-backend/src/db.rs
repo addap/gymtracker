@@ -30,7 +30,7 @@ async fn add_exercise_names(conn: &DatabaseConnection) -> Result<()> {
         "Deadlift",
         "Squat",
         "Leg Extension",
-        "Cable Row",
+        "Cable Rows",
     ];
     let names_japanese = vec![
         "ベンチプレス",
@@ -66,7 +66,14 @@ async fn add_superuser(data: &PopulateData, state: &AppState) -> Result<()> {
         password: data.superuser_password.clone(),
         email: data.superuser_email.clone(),
     };
-    create_user(&signup_data, true, state).await?;
+    let res = UserLogin::find()
+        .filter(user_login::Column::Username.eq(data.superuser_name.clone()))
+        .one(&state.conn)
+        .await?;
+    if res.is_none() {
+        create_user(&signup_data, true, state).await?;
+    }
+
     Ok(())
 }
 

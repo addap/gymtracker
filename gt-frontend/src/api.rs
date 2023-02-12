@@ -12,4 +12,5 @@ lazy_static! {
     pub static ref USER_LOGIN: String = api_url("/user/login");
     pub static ref USER_REGISTER: String = api_url("/user/register");
     pub static ref AUTH_CHECK: String = api_url("/auth/check");
+    pub static ref MERGE_NAMES: String = api_url("/admin/merge-names");
 }

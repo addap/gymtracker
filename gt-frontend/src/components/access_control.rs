@@ -2,7 +2,7 @@
 use dioxus::prelude::*;
 use fermi::use_set;
 
-use crate::auth::{is_logged_in, store_auth_token, ACTIVE_AUTH_TOKEN};
+use crate::auth::{is_logged_in, is_superuser, store_auth_token, ACTIVE_AUTH_TOKEN};
 
 #[derive(Props)]
 pub struct AccessControlProps<'a> {
@@ -33,6 +33,20 @@ pub fn LoggedOut<'a>(cx: Scope<'a, AccessControlProps<'a>>) -> Element<'a> {
                 rsx!{ p { "You are already logged in. Go back." } }
             } else {
                 rsx!{ &cx.props.children }
+            }
+        }
+    })
+}
+
+pub fn Superuser<'a>(cx: Scope<'a, AccessControlProps<'a>>) -> Element<'a> {
+    let is_superuser = is_superuser(&cx);
+
+    cx.render(rsx! {
+        div {
+            if is_superuser {
+                rsx!{ &cx.props.children }
+            } else {
+                rsx!{ p { "You must be an admin to view this site. Go back." } }
             }
         }
     })

@@ -99,6 +99,12 @@ pub struct PRQuery {
     pub weighted: Vec<PRWeightedQuery>,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
+pub struct MergeNames {
+    pub to_delete: String,
+    pub to_expand: String,
+}
+
 impl ExerciseSet {
     pub fn name(&self) -> &str {
         match self {

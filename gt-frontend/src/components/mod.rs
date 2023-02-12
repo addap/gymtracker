@@ -1,5 +1,6 @@
 mod access_control;
 mod add_exercise_set;
+mod admin_page;
 mod exercise_set;
 mod history_page;
 mod login_page;
@@ -12,6 +13,7 @@ mod stats_page;
 
 pub use access_control::*;
 pub use add_exercise_set::*;
+pub use admin_page::*;
 pub use exercise_set::*;
 pub use history_page::*;
 pub use login_page::*;
