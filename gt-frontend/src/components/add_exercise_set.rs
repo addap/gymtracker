@@ -38,18 +38,23 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
         );
 
     cx.render(rsx! {
-        div {
-            class: "my-3",
+        form {
+            class: "bg-body-tertiary my-2 p-2",
             div {
-                class: "row",
+                class: "row gap-1",
                 p { 
-                    class: "col",
+                    class: "col-12",
                     "Weighted Exercise Set" 
                 }
-                div { class: "w-100" }
                 div {
-                    class: "col-12 col-sm-2",
+                    class: "form-group col-12 col-sm-auto",
+                    label {
+                        r#for: "w-exercise-names",
+                        "Exercise Name"
+                    }
                     input {
+                        class: "form-control",
+                        id: "w-exercise-names",
                         list: "w-exercise-names-list",
                         value: "{w_exercise_set_name}",
                         placeholder: "exercise name",
@@ -61,8 +66,13 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                     }
                 }
                 div {
-                    class: "col-12 col-sm-2",
+                    class: "form-group col-12 col-sm-2",
+                    label {
+                        r#for: "w-exercise-set-weight",
+                        "Weight (kg)"
+                    }
                     input {
+                        class: "form-control",
                         id: "w-exercise-set-weight",
                         r#type: "number",
                         value: "{w_exercise_set_weight}",
@@ -73,14 +83,15 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                             }
                         }
                     }
-                    label {
-                        r#for: "w-exercise-set-weight",
-                        " kg"
-                    }
                 }
                 div {
-                    class: "col-12 col-sm-2",
+                    class: "form-group col-12 col-sm-2",
+                    label {
+                        r#for: "w-exercise-set-reps",
+                        "Reps"
+                    }
                     input {
+                        class: "form-control",
                         id: "w-exercise-set-reps",
                         r#type: "number",
                         min: "0",
@@ -91,17 +102,11 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                             }
                         }
                     }
-                    label {
-                        r#for: "w-exercise-set-reps",
-                        " reps"
-                    }
                 }
-                div {
-                    class: "w-100",
-                }
+                div { class: "w-100" }
                 div {
                     button {
-                        class: "col-3 col-sm-1 btn btn-outline-success",
+                        class: "col-3 col-sm-1 btn btn-sm btn-outline-success",
                         onclick: move |_| cx.spawn({
                             to_owned![w_exercise_set_name, w_exercise_set_reps, w_exercise_set_weight, auth_token];
                             let fetch_names = cx.props.fetch_names.clone();
@@ -163,18 +168,23 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
         );
 
     cx.render(rsx! {
-        div {
-            class: "my-3",
+        form {
+            class: "bg-body-tertiary my-2 p-2",
             div {
-                class: "row",
+                class: "row gap-1",
                 p { 
-                    class: "col", 
+                    class: "col-12", 
                     "Bodyweight Exercise Set" 
                 }
-                div { class: "w-100" }
                 div {
-                    class: "col-12 col-sm-2",
+                    class: "form-group col-12 col-sm-auto",
+                    label {
+                        r#for: "b-exercise-names",
+                        "Exercise Name"
+                    }
                     input {
+                        class: "form-control",
+                        id: "b-exercise-names",
                         list: "b-exercise-names-list",
                         value: "{b_exercise_set_name}",
                         placeholder: "exercise name",
@@ -186,8 +196,13 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                     }
                 }
                 div {
-                    class: "col-12 col-sm-2",
+                    class: "form-group col-12 col-sm-2",
+                    label {
+                        r#for: "b-exercise-set-reps",
+                        "Reps"
+                    }
                     input {
+                        class: "form-control",
                         id: "b-exercise-set-reps",
                         r#type: "number",
                         min: "0",
@@ -198,15 +213,11 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                             }
                         }
                     }
-                    label {
-                        r#for: "b-exercise-set-reps",
-                        " reps"
-                    }
                 }
                 div { class: "w-100" }
                 div {
                     button {
-                        class: "col-3 col-sm-1 btn btn-outline-success",
+                        class: "col-3 col-sm-1 btn btn-sm btn-outline-success",
                         onclick: move |_| cx.spawn({
                             to_owned![b_exercise_set_name, b_exercise_set_reps, auth_token];
                             let fetch_names = cx.props.fetch_names.clone();

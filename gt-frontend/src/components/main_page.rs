@@ -54,13 +54,11 @@ fn LoggedInMainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
     cx.render(rsx! {
         div {
-            class: "row",
             c::AddExerciseSetWeighted {
                 exercise_names: exercise_names.get().to_owned(),
                 fetch_names: fetch_names,
                 display_message: &cx.props.display_message
             }
-            br {}
             c::AddExerciseSetBodyweight {
                 exercise_names: exercise_names.get().to_owned(),
                 fetch_names: fetch_names,

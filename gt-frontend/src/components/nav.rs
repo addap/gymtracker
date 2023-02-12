@@ -53,11 +53,11 @@ pub fn Navbar(cx: Scope) -> Element {
             } else {
                 rsx!{
                     nav {
-                        class: "navbar navbar-expand-lg bg-body-tertiary",
-                        // div {
-                        //     class: "navbar-collapse collapse w-100",
+                        class: "navbar navbar-expand bg-body-tertiary",
+                        div {
+                            class: "container-fluid",
                             div {
-                                class: "navbar-nav me-auto",
+                                class: "navbar-nav",
                                 div {
                                     class: "nav-item",
                                     Link {
@@ -73,7 +73,7 @@ pub fn Navbar(cx: Scope) -> Element {
                                     }
                                 }
                             }
-                        // }
+                        }
                     }
                 }
             }
