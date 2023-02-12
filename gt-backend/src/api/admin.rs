@@ -28,7 +28,8 @@ pub async fn merge_names(
 
     log::info!("{}", q.build(DbBackend::Sqlite).to_string());
 
-    let res = q.exec(&state.conn).await?;
+    let res_update = q.exec(&state.conn).await?;
+    let _res_delete = delete_name.delete(&state.conn).await?;
 
-    Ok(Json(res.rows_affected))
+    Ok(Json(res_update.rows_affected))
 }

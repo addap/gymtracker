@@ -50,11 +50,11 @@ async fn main() -> anyhow::Result<()> {
         state.clone(),
         api::auth::auth_middleware,
     ));
-    // let superuser_auth =
-    //     ServiceBuilder::new().layer(middleware::from_fn(api::auth::superuser_middleware));
+    let superuser_auth =
+        ServiceBuilder::new().layer(middleware::from_fn(api::auth::superuser_middleware));
     let auth_api_routes = Router::new()
-        // .route("/admin/merge-names", post(api::admin::merge_names))
-        // .layer(superuser_auth)
+        .route("/admin/merge-names", post(api::admin::merge_names))
+        .layer(superuser_auth)
         .route(
             "/exercise/name",
             get(api::exercise::get_all_exercise_names).post(api::exercise::add_exercise_name),
