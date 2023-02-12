@@ -38,7 +38,7 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
         );
 
     cx.render(rsx! {
-        form {
+        div {
             class: "bg-body-tertiary my-2 p-2",
             div {
                 class: "row gap-1",
@@ -168,7 +168,7 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
         );
 
     cx.render(rsx! {
-        form {
+        div {
             class: "bg-body-tertiary my-2 p-2",
             div {
                 class: "row gap-1",
