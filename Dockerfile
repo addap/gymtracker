@@ -1,4 +1,4 @@
-FROM rust:1.65 as builder
+FROM rustlang/rust:nightly-bullseye-slim as builder
 
 RUN rustup target add wasm32-unknown-unknown && cargo install trunk
 
