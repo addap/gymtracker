@@ -10,6 +10,7 @@ mod nav;
 mod pr_page;
 mod register_page;
 mod stats_page;
+mod user_page;
 
 pub use access_control::*;
 pub use add_exercise_set::*;
@@ -23,3 +24,4 @@ pub use nav::*;
 pub use pr_page::*;
 pub use register_page::*;
 pub use stats_page::*;
+pub use user_page::*;

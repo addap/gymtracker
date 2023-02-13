@@ -1,6 +1,8 @@
 use std::fmt::Display;
 
 use derive_more::{Deref, From};
+#[cfg(not(target_arch = "wasm32"))]
+use sea_orm::FromQueryResult;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -46,6 +48,16 @@ pub struct UserInfo {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct UserInfoTs {
+    pub height: Option<f64>,
+    pub weight: Option<f64>,
+    pub muscle_mass: Option<f64>,
+    pub body_fat: Option<f64>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[cfg_attr(not(target_arch = "wasm32"), derive(FromQueryResult))]
+pub struct UserInfoQuery {
+    pub display_name: String,
     pub height: Option<f64>,
     pub weight: Option<f64>,
     pub muscle_mass: Option<f64>,

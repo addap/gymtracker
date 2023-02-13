@@ -73,7 +73,7 @@ async fn main() -> anyhow::Result<()> {
             get(api::user::get_user_info).post(api::user::change_user_info),
         )
         .route(
-            "/user/info_ts",
+            "/user/info-ts",
             get(api::user::get_user_info_ts).post(api::user::add_user_info_ts),
         )
         .route("/user/logout", post(api::user::logout))
