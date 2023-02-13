@@ -2,20 +2,27 @@ use dioxus::prelude::*;
 use fermi::{use_read, use_set, Atom};
 use web_sys::window;
 
-use gt_core::models::AuthToken;
-
 use crate::{api, messages::UIMessage, request_ext::RequestExt};
+use gt_core::auth::get_claims_unverified;
+use gt_core::models::AuthToken;
 
 pub static ACTIVE_AUTH_TOKEN: Atom<Option<AuthToken>> = |_| None;
 
 pub fn is_superuser<'a, T>(cx: &Scope<'a, T>) -> bool {
-    true
+    let opt_auth_token = use_read(cx, ACTIVE_AUTH_TOKEN);
+    let opt = (|| {
+        let auth_token = opt_auth_token.as_ref()?;
+        let claims = get_claims_unverified(auth_token).ok()?;
+        let is_superuser = claims.get("adm")?;
+        is_superuser.parse().ok()
+    })();
+
+    opt.unwrap_or(false)
 }
 
-// TODO verify token using api
 pub fn is_logged_in<'a, T>(cx: &Scope<'a, T>) -> bool {
-    let auth_token = use_read(cx, ACTIVE_AUTH_TOKEN);
-    auth_token.is_some()
+    let opt_auth_token = use_read(cx, ACTIVE_AUTH_TOKEN);
+    opt_auth_token.is_some()
 }
 
 pub fn init_auth_token(cx: &Scope) {

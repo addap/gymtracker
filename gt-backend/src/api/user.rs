@@ -9,7 +9,8 @@ use pbkdf2::{
 };
 use sea_orm::*;
 
-use crate::{api::auth, db, AppError, AppState, Result};
+use crate::{db, AppError, AppState, Result};
+use gt_core::auth::create_token;
 use gt_core::entities::{prelude::*, *};
 use gt_core::{models, models::AuthToken};
 
@@ -20,11 +21,12 @@ pub async fn register(
 ) -> Result<Json<AuthToken>> {
     let last_insert_id = db::create_user(&payload, false, &state).await?;
 
-    let auth_token = auth::create_token(
-        &state,
+    let auth_token = create_token(
+        &state.secret,
         UserAuth {
             username: payload.username,
             id: last_insert_id,
+            is_superuser: false,
         },
     )?;
 
@@ -55,11 +57,12 @@ pub async fn login(
         .verify_password(payload.password.as_bytes(), &pw_hash)
         .map_err(|_| AppError::ValidationError)?;
 
-    let auth_token = auth::create_token(
-        &state,
+    let auth_token = create_token(
+        &state.secret,
         UserAuth {
             username: user_login.username,
             id: user_login.id,
+            is_superuser: user_login.is_superuser,
         },
     )?;
 

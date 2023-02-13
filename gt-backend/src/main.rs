@@ -48,7 +48,7 @@ async fn main() -> anyhow::Result<()> {
 
     let token_auth = ServiceBuilder::new().layer(middleware::from_fn_with_state(
         state.clone(),
-        api::auth::auth_middleware,
+        api::auth::jwt_middleware,
     ));
     let superuser_auth =
         ServiceBuilder::new().layer(middleware::from_fn(api::auth::superuser_middleware));

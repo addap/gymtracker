@@ -36,6 +36,7 @@ impl From<&str> for AuthToken {
 pub struct UserAuth {
     pub username: String,
     pub id: i32,
+    pub is_superuser: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

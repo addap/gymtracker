@@ -8,7 +8,6 @@ use crate::auth::{is_logged_in, is_superuser, store_auth_token, ACTIVE_AUTH_TOKE
 
 #[derive(Props)]
 pub struct AccessControlProps<'a> {
-    // TODO doesn't this also have to be pub?
     children: Element<'a>,
 }
 

@@ -11,6 +11,9 @@ chrono = "0.4.23"
 derive_more = "0.99.17"
 num_enum = "0.5.9"
 serde = "1.0.152"
+hmac = "0.12.1"
+jwt = "0.16.0"
+sha2 = "0.10.6"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 sea-orm = { version = "0.10.6", features = [ "sqlx-sqlite", "runtime-tokio-rustls", "macros" ] }
