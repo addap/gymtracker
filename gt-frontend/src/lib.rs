@@ -73,15 +73,17 @@ pub fn app(cx: Scope) -> Element {
             class: "container-fluid",
             Router {
                 base_url: APP_BASE,
+                c::Navbar {}
                 div {
-                    c::Navbar {}
-                    // TODO any way to make alerts appear vertically below the navbar?
+                    // In order for the messages to be positioned below the navbar we wrap everything after the navbar
+                    // in a `position: relative` div.
+                    style: "position: relative",
                     div {
-                        style: "position: fixed; right: 0px; top: 0px; z-index: 99999",
+                        style: "position: absolute; right: 0px; top: 0px; z-index: 99999",
                         c::Messages { ui_messages: ui_messages }
                     }
+                    p { BANNER.clone() }
                 }
-                p { BANNER.clone() }
                 Route { to: "/login", c::LoggedOut{ c::LoginPage { display_message: display_message } }}
                 Route { to: "/register", c::LoggedOut {  c::RegisterPage { display_message: display_message }  }}
                 Route { to: "/admin", c::Superuser { c::AdminPage { display_message: display_message } }}
