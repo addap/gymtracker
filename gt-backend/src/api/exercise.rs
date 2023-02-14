@@ -1,11 +1,11 @@
-use std::collections::HashMap;
-
+use axum::extract::Path;
 use axum::{extract::State, Extension, Json};
 use chrono::Utc;
 use itertools::Itertools;
 use sea_orm::*;
+use std::collections::HashMap;
 
-use crate::{AppState, Result};
+use crate::{db, AppState, Result};
 use gt_core::entities::{prelude::*, *};
 use gt_core::models;
 
@@ -75,41 +75,20 @@ pub async fn add_exercise_set_for_user(
     Ok(Json(()))
 }
 
-pub async fn get_exercise_sets_for_user(
+pub async fn get_all_exercise_sets_for_user(
     State(state): State<AppState>,
     Extension(user): Extension<user_login::Model>,
 ) -> Result<Json<Vec<models::ExerciseSetQuery>>> {
-    let q = ExerciseSet::find()
-        .filter(exercise_set::Column::UserId.eq(user.id))
-        .column_as(exercise_name::Column::Name, "name")
-        .column_as(exercise_name::Column::Kind, "kind")
-        .order_by(exercise_set::Column::CreatedAt, Order::Desc)
-        .join(
-            JoinType::InnerJoin,
-            exercise_set::Relation::ExerciseName.def(),
-        );
+    let res = db::get_exercise_sets(user.id, None, &state.conn).await?;
+    Ok(Json(res))
+}
 
-    log::info!("{}", q.build(DbBackend::Sqlite).to_string());
-
-    let res = q
-        .into_model::<models::ExerciseSetJoinQuery>()
-        .all(&state.conn)
-        .await?;
-
-    let res = res
-        .into_iter()
-        .map(|exsj| match exsj.kind {
-            models::ExerciseKind::Weighted => {
-                let exs: models::ExerciseSetWeightedQuery = exsj.try_into()?;
-                Ok(models::ExerciseSetQuery::Weighted(exs))
-            }
-            models::ExerciseKind::Bodyweight => {
-                let exs: models::ExerciseSetBodyweightQuery = exsj.try_into()?;
-                Ok(models::ExerciseSetQuery::Bodyweight(exs))
-            }
-        })
-        .collect::<Result<Vec<_>>>()?;
-
+pub async fn get_paged_exercise_sets_for_user(
+    State(state): State<AppState>,
+    Extension(user): Extension<user_login::Model>,
+    Path(page_size): Path<u64>,
+) -> Result<Json<Vec<models::ExerciseSetQuery>>> {
+    let res = db::get_exercise_sets(user.id, Some(page_size), &state.conn).await?;
     Ok(Json(res))
 }
 

@@ -19,7 +19,7 @@ pub async fn register(
     State(state): State<AppState>,
     Json(payload): Json<models::UserSignup>,
 ) -> Result<Json<AuthToken>> {
-    let last_insert_id = db::create_user(&payload, false, &state).await?;
+    let last_insert_id = db::create_user(&payload, false, &state.conn).await?;
 
     let auth_token = create_token(
         &state.secret,

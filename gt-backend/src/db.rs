@@ -71,7 +71,7 @@ async fn add_superuser(data: &PopulateData, state: &AppState) -> Result<()> {
         .one(&state.conn)
         .await?;
     if res.is_none() {
-        create_user(&signup_data, true, state).await?;
+        create_user(&signup_data, true, &state.conn).await?;
     }
 
     Ok(())
@@ -80,7 +80,7 @@ async fn add_superuser(data: &PopulateData, state: &AppState) -> Result<()> {
 pub async fn create_user(
     data: &models::UserSignup,
     is_superuser: bool,
-    state: &AppState,
+    conn: &DatabaseConnection,
 ) -> Result<i32> {
     if !EmailAddress::is_valid(&data.email)
         || data.display_name.is_empty()
@@ -105,14 +105,57 @@ pub async fn create_user(
         is_superuser: ActiveValue::Set(is_superuser),
         ..Default::default()
     };
-    let new_user = UserLogin::insert(new_user_login).exec(&state.conn).await?;
+    let new_user = UserLogin::insert(new_user_login).exec(conn).await?;
 
     let new_user_info = user_info::ActiveModel {
         display_name: ActiveValue::Set(data.display_name.clone()),
         user_id: ActiveValue::Set(new_user.last_insert_id),
         ..Default::default()
     };
-    UserInfo::insert(new_user_info).exec(&state.conn).await?;
+    UserInfo::insert(new_user_info).exec(conn).await?;
 
     Ok(new_user.last_insert_id)
+}
+
+pub async fn get_exercise_sets(
+    user_id: i32,
+    limit_opt: Option<u64>,
+    conn: &DatabaseConnection,
+) -> Result<Vec<models::ExerciseSetQuery>> {
+    let mut q = ExerciseSet::find()
+        .filter(exercise_set::Column::UserId.eq(user_id))
+        .column_as(exercise_name::Column::Name, "name")
+        .column_as(exercise_name::Column::Kind, "kind")
+        .order_by(exercise_set::Column::CreatedAt, Order::Desc)
+        .join(
+            JoinType::InnerJoin,
+            exercise_set::Relation::ExerciseName.def(),
+        );
+
+    if let Some(limit) = limit_opt {
+        q = q.limit(limit)
+    }
+
+    log::info!("{}", q.build(DbBackend::Sqlite).to_string());
+
+    let res = q
+        .into_model::<models::ExerciseSetJoinQuery>()
+        .all(conn)
+        .await?;
+
+    let res = res
+        .into_iter()
+        .map(|exsj| match exsj.kind {
+            models::ExerciseKind::Weighted => {
+                let exs: models::ExerciseSetWeightedQuery = exsj.try_into()?;
+                Ok(models::ExerciseSetQuery::Weighted(exs))
+            }
+            models::ExerciseKind::Bodyweight => {
+                let exs: models::ExerciseSetBodyweightQuery = exsj.try_into()?;
+                Ok(models::ExerciseSetQuery::Bodyweight(exs))
+            }
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    Ok(res)
 }

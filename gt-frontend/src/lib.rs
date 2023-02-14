@@ -6,10 +6,8 @@ mod components;
 mod messages;
 mod request_ext;
 
-use std::collections::VecDeque;
-
-use auth::init_auth_token;
 use chrono::{DateTime, Utc};
+use const_format::concatcp;
 use dioxus::prelude::*;
 use dioxus_router::{Route, Router};
 use fermi::use_init_atom_root;
@@ -17,8 +15,10 @@ use futures_util::StreamExt;
 use gloo_timers::future::TimeoutFuture;
 use lazy_static::lazy_static;
 use log::info;
+use std::collections::VecDeque;
 use wasm_bindgen::prelude::*;
 
+use auth::init_auth_token;
 use components as c;
 pub use gt_core::APP_BASE;
 use messages::UIMessage;
@@ -27,11 +27,13 @@ use messages::UIMessage;
 extern "C" {
     static JS_BANNER: String;
     static JS_MESSAGE_TIMEOUT: i32;
+    static JS_PAGE_SIZE: i32;
 }
 
 lazy_static! {
     static ref BANNER: String = JS_BANNER.clone();
     static ref MESSAGE_TIMEOUT: i64 = JS_MESSAGE_TIMEOUT.clone() as i64;
+    static ref PAGE_SIZE: u64 = JS_PAGE_SIZE.clone() as u64;
 }
 
 pub fn app(cx: Scope) -> Element {
