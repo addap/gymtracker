@@ -29,13 +29,6 @@ pub fn Navbar(cx: Scope) -> Element {
                                         class: "nav-item navbar-text",
                                         Link {
                                             class: "nav-link",
-                                            to: concatcp!(APP_BASE, "/user"), "User"
-                                        }
-                                    }
-                                    div {
-                                        class: "nav-item navbar-text",
-                                        Link {
-                                            class: "nav-link",
                                             to: concatcp!(APP_BASE, "/"), "Home"
                                         }
                                     }
@@ -51,6 +44,13 @@ pub fn Navbar(cx: Scope) -> Element {
                                         Link {
                                             class: "nav-link",
                                             to: concatcp!(APP_BASE, "/pr"), "PR"
+                                        }
+                                    }
+                                    div {
+                                        class: "nav-item navbar-text",
+                                        Link {
+                                            class: "nav-link",
+                                            to: concatcp!(APP_BASE, "/user"), "User"
                                         }
                                     }
                                 }

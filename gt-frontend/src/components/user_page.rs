@@ -253,7 +253,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         Some(()) => {
             rsx! {
                 div {
-                    user_form,
+                    user_form
                     user_form_ts
                 }
             }

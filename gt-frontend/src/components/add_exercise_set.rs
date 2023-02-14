@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
+use derive_more::Deref;
 use fermi::{use_read, use_atom_state, Atom};
 use log::info;
 
@@ -12,9 +13,16 @@ use crate::{
 };
 use gt_core::models;
 
-static W_EXERCISE_SET_NAME: Atom<String> = |_| "".to_string();
+/// Wrapper types to prevent merging of Atoms.
+/// c.f. https://github.com/DioxusLabs/dioxus/issues/706
+#[derive(Deref)]
+struct Wrapper1<T>(T);
+#[derive(Deref)]
+struct Wrapper2<T>(T);
+
+static W_EXERCISE_SET_NAME: Atom<Wrapper1<String>> = |_| Wrapper1("".to_string());
 static W_EXERCISE_SET_WEIGHT: Atom<f64> = |_| 1.0;
-static B_EXERCISE_SET_NAME: Atom<String> = |_| "".to_string();
+static B_EXERCISE_SET_NAME: Atom<Wrapper2<String>> = |_| Wrapper2("".to_string());
 
 #[derive(Props)]
 pub struct AddExerciseProps<'a> {
@@ -56,9 +64,9 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                         class: "form-control",
                         id: "w-exercise-names",
                         list: "w-exercise-names-list",
-                        value: "{w_exercise_set_name}",
+                        value: "{w_exercise_set_name.0}",
                         placeholder: "exercise name",
-                        oninput: move |evt| w_exercise_set_name.set(evt.value.clone()),
+                        oninput: move |evt| w_exercise_set_name.set(Wrapper1(evt.value.clone())),
                     }
                     datalist {
                         id: "w-exercise-names-list",
@@ -118,7 +126,7 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                                 if !w_exercise_set_name.current().is_empty()
                                 && *w_exercise_set_reps.current() > 0 {
                                     let exs: models::ExerciseSet = (models::ExerciseSetWeighted {
-                                        name: (*w_exercise_set_name.current()).clone(),
+                                        name: w_exercise_set_name.current().0.clone(),
                                         reps: *w_exercise_set_reps.current(),
                                         weight: *w_exercise_set_weight.current(),
                                     }).into();
@@ -132,9 +140,9 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                                         Ok(()) => {
                                             fetch_names.send(c::main_page::FetchNames);
                                             display_message.send(UIMessage::info(format!("Added exercise \"{}\" x{} ({}kg)",
-                                                w_exercise_set_name.current(),
-                                                w_exercise_set_reps.current(),
-                                                w_exercise_set_weight.current()
+                                                w_exercise_set_name.current().0,
+                                                *w_exercise_set_reps.current(),
+                                                *w_exercise_set_weight.current()
                                             )));
 
                                             // Reset reps so that you cannot accidentally submit it twice.
@@ -186,9 +194,9 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                         class: "form-control",
                         id: "b-exercise-names",
                         list: "b-exercise-names-list",
-                        value: "{b_exercise_set_name}",
+                        value: "{b_exercise_set_name.0}",
                         placeholder: "exercise name",
-                        oninput: move |evt| b_exercise_set_name.set(evt.value.clone()),
+                        oninput: move |evt| b_exercise_set_name.set(Wrapper2(evt.value.clone())),
                     }
                     datalist {
                         id: "b-exercise-names-list",
@@ -229,7 +237,7 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                                 if !b_exercise_set_name.current().is_empty() 
                                 && *b_exercise_set_reps.current() > 0 {
                                     let exs: models::ExerciseSet = (models::ExerciseSetBodyweight {
-                                        name: (*b_exercise_set_name.current()).clone(),
+                                        name: b_exercise_set_name.current().0.clone(),
                                         reps: *b_exercise_set_reps.current(),
                                     }).into();
 
@@ -242,8 +250,8 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                                         Ok(()) => {
                                             fetch_names.send(c::main_page::FetchNames);
                                             display_message.send(UIMessage::info(format!("Added exercise \"{}\" x {}",
-                                                b_exercise_set_name.current(),
-                                                b_exercise_set_reps.current()
+                                                b_exercise_set_name.current().0,
+                                                *b_exercise_set_reps.current()
                                             )));
 
                                             // Reset reps so that you cannot accidentally submit it twice.

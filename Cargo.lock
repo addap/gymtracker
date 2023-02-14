@@ -1257,6 +1257,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "const_format",
+ "derive_more",
  "dioxus",
  "dioxus-router",
  "dioxus-web",
