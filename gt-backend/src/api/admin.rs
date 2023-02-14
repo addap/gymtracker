@@ -16,14 +16,28 @@ pub async fn merge_names(
         .one(&state.conn)
         .await?
         .ok_or(AppError::ResourceNotFound)?;
-    let expand_name = ExerciseName::find()
+    let expand_name_opt = ExerciseName::find()
         .filter(exercise_name::Column::Name.eq(payload.to_expand.clone()))
         .one(&state.conn)
-        .await?
-        .ok_or(AppError::ResourceNotFound)?;
+        .await?;
+
+    let expand_name_id = if let Some(expand_name) = expand_name_opt {
+        if delete_name.kind != expand_name.kind {
+            return Err(AppError::ValidationError);
+        }
+        expand_name.id
+    } else {
+        let new_name = exercise_name::ActiveModel {
+            name: ActiveValue::Set(payload.to_expand.clone()),
+            kind: ActiveValue::Set(delete_name.kind.into()),
+            ..Default::default()
+        };
+        let res = ExerciseName::insert(new_name).exec(&state.conn).await?;
+        res.last_insert_id
+    };
 
     let q = ExerciseSet::update_many()
-        .col_expr(exercise_set::Column::NameId, Expr::value(expand_name.id))
+        .col_expr(exercise_set::Column::NameId, Expr::value(expand_name_id))
         .filter(exercise_set::Column::NameId.eq(delete_name.id));
 
     log::info!("{}", q.build(DbBackend::Sqlite).to_string());
