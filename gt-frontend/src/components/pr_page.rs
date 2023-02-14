@@ -39,9 +39,14 @@ pub fn PRPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
     let content = match fetch.value() {
         Some(Some(prs)) => {
-            let prlist = prs.weighted.iter().map(|pr| {
+            let prlist_weight = prs.weighted_weight.iter().map(|pr| {
                 rsx! {
                     li { format!("{}: {:?}", pr.name.clone(), pr.pr_weight.clone()) }
+                }
+            });
+            let prlist_reps = prs.weighted_reps.iter().map(|pr| {
+                rsx! {
+                    li { format!("{}: {:?}", pr.name.clone(), pr.pr_reps.clone()) }
                 }
             });
             rsx! {
@@ -49,11 +54,10 @@ pub fn PRPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     onclick: move |_| fetch.restart(),
                     "Refresh"
                 }
-                // if !prlist.is_empty() {
-                    rsx!{
-                        ul { prlist }
-                    }
-                // }
+                p { "By Weight" }
+                ul { prlist_weight }
+                p { "By Reps" }
+                ul { prlist_reps }
             }
         }
         _ => {

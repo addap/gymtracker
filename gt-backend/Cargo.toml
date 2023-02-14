@@ -19,6 +19,7 @@ hyper = { version = "0.14.23", features = ["full"] }
 itertools = "0.10.5"
 log = "0.4.17"
 migration = { path = "../migration" }
+ordered-float = "3.4.0"
 pbkdf2 = "0.11.0"
 sea-orm = { version = "0.10.6", features = [ "sqlx-sqlite", "runtime-tokio-rustls", "macros" ] }
 serde = "1.0.152"

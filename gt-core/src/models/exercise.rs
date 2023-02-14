@@ -88,15 +88,21 @@ pub enum ExerciseSetQuery {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
-pub struct PRWeightedQuery {
+pub struct PRWeightedQueryWeight {
     pub name: String,
     pub pr_weight: Vec<f64>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
+pub struct PRWeightedQueryReps {
+    pub name: String,
     pub pr_reps: Vec<i32>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
 pub struct PRQuery {
-    pub weighted: Vec<PRWeightedQuery>,
+    pub weighted_weight: Vec<PRWeightedQueryWeight>,
+    pub weighted_reps: Vec<PRWeightedQueryReps>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
