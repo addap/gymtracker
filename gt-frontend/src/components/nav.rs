@@ -4,7 +4,10 @@ use dioxus::prelude::*;
 use dioxus_router::Link;
 
 use crate::components as c;
-use crate::{auth::is_logged_in, APP_BASE};
+use crate::{
+    auth::{is_logged_in, is_superuser},
+    APP_BASE,
+};
 
 pub fn Navbar(cx: Scope) -> Element {
     cx.render(rsx! {
@@ -16,44 +19,55 @@ pub fn Navbar(cx: Scope) -> Element {
                         class: "navbar navbar-expand bg-body-tertiary",
                         div {
                             class: "container-fluid",
+                            div {
+                                class: "navbar-nav",
                                 div {
-                                    class: "navbar-nav",
+                                    class: "nav-item",
                                     div {
-                                        class: "nav-item",
+                                        class: "nav-link",
+                                        c::Logout {}
+                                    }
+                                }
+                                div {
+                                    class: "nav-item navbar-text",
+                                    Link {
+                                        class: "nav-link",
+                                        to: concatcp!(APP_BASE, "/"), "Home"
+                                    }
+                                }
+                                div {
+                                    class: "nav-item navbar-text",
+                                    Link {
+                                        class: "nav-link",
+                                        to: concatcp!(APP_BASE, "/history"), "History"
+                                    }
+                                }
+                                div {
+                                    class: "nav-item navbar-text",
+                                    Link {
+                                        class: "nav-link",
+                                        to: concatcp!(APP_BASE, "/pr"), "PR"
+                                    }
+                                }
+                                div {
+                                    class: "nav-item navbar-text",
+                                    Link {
+                                        class: "nav-link",
+                                        to: concatcp!(APP_BASE, "/user"), "User"
+                                    }
+                                }
+                                if is_superuser(&cx) {
+                                    rsx! {
                                         div {
-                                            class: "nav-link",
-                                            c::Logout {}
-                                        }
-                                    }
-                                    div {
-                                        class: "nav-item navbar-text",
-                                        Link {
-                                            class: "nav-link",
-                                            to: concatcp!(APP_BASE, "/"), "Home"
-                                        }
-                                    }
-                                    div {
-                                        class: "nav-item navbar-text",
-                                        Link {
-                                            class: "nav-link",
-                                            to: concatcp!(APP_BASE, "/history"), "History"
-                                        }
-                                    }
-                                    div {
-                                        class: "nav-item navbar-text",
-                                        Link {
-                                            class: "nav-link",
-                                            to: concatcp!(APP_BASE, "/pr"), "PR"
-                                        }
-                                    }
-                                    div {
-                                        class: "nav-item navbar-text",
-                                        Link {
-                                            class: "nav-link",
-                                            to: concatcp!(APP_BASE, "/user"), "User"
+                                            class: "nav-item navbar-text",
+                                            Link {
+                                                class: "nav-link",
+                                                to: concatcp!(APP_BASE, "/admin"), "Admin"
+                                            }
                                         }
                                     }
                                 }
+                            }
                         }
                     }
                 }
