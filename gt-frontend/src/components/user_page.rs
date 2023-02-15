@@ -120,7 +120,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             class: "row gap-1",
             p {
                 class: "col-12",
-                "User Info (set to 0 to not update)"
+                "Body Info (set to 0 to not update)"
             }
             div {
                 class: "form-group col-12 col-sm-2",
@@ -184,7 +184,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 class: "form-group col-12 col-sm-2",
                 label {
                     r#for: "body-fat",
-                    "Body Fat (kg)"
+                    "Body Fat (%)"
                 }
                 input {
                     class: "form-control",
