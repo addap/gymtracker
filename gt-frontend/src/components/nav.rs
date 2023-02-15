@@ -13,58 +13,56 @@ pub fn Navbar(cx: Scope) -> Element {
     cx.render(rsx! {
         div {
             class: "sticky-top",
+            nav {
+                class: "navbar navbar-expand bg-body-secondary",
+                div {
+                    class: "container",
             if is_logged_in(&cx) {
                 rsx!{
-                    nav {
-                        class: "navbar navbar-expand bg-body-tertiary",
+                    div {
+                        class: "navbar-nav",
                         div {
-                            class: "container-fluid",
+                            class: "nav-item",
                             div {
-                                class: "navbar-nav",
-                                div {
-                                    class: "nav-item",
-                                    div {
-                                        class: "nav-link",
-                                        c::Logout {}
-                                    }
-                                }
+                                class: "nav-link",
+                                c::Logout {}
+                            }
+                        }
+                        div {
+                            class: "nav-item navbar-text",
+                            Link {
+                                class: "nav-link",
+                                to: concatcp!(APP_BASE, "/"), "Home"
+                            }
+                        }
+                        div {
+                            class: "nav-item navbar-text",
+                            Link {
+                                class: "nav-link",
+                                to: concatcp!(APP_BASE, "/history"), "History"
+                            }
+                        }
+                        div {
+                            class: "nav-item navbar-text",
+                            Link {
+                                class: "nav-link",
+                                to: concatcp!(APP_BASE, "/pr"), "PR"
+                            }
+                        }
+                        div {
+                            class: "nav-item navbar-text",
+                            Link {
+                                class: "nav-link",
+                                to: concatcp!(APP_BASE, "/user"), "User"
+                            }
+                        }
+                        if is_superuser(&cx) {
+                            rsx! {
                                 div {
                                     class: "nav-item navbar-text",
                                     Link {
                                         class: "nav-link",
-                                        to: concatcp!(APP_BASE, "/"), "Home"
-                                    }
-                                }
-                                div {
-                                    class: "nav-item navbar-text",
-                                    Link {
-                                        class: "nav-link",
-                                        to: concatcp!(APP_BASE, "/history"), "History"
-                                    }
-                                }
-                                div {
-                                    class: "nav-item navbar-text",
-                                    Link {
-                                        class: "nav-link",
-                                        to: concatcp!(APP_BASE, "/pr"), "PR"
-                                    }
-                                }
-                                div {
-                                    class: "nav-item navbar-text",
-                                    Link {
-                                        class: "nav-link",
-                                        to: concatcp!(APP_BASE, "/user"), "User"
-                                    }
-                                }
-                                if is_superuser(&cx) {
-                                    rsx! {
-                                        div {
-                                            class: "nav-item navbar-text",
-                                            Link {
-                                                class: "nav-link",
-                                                to: concatcp!(APP_BASE, "/admin"), "Admin"
-                                            }
-                                        }
+                                        to: concatcp!(APP_BASE, "/admin"), "Admin"
                                     }
                                 }
                             }
@@ -72,30 +70,26 @@ pub fn Navbar(cx: Scope) -> Element {
                     }
                 }
             } else {
-                rsx!{
-                    nav {
-                        class: "navbar navbar-expand bg-body-tertiary",
+                rsx! {
+                    div {
+                        class: "navbar-nav",
                         div {
-                            class: "container-fluid",
-                            div {
-                                class: "navbar-nav",
-                                div {
-                                    class: "nav-item",
-                                    Link {
-                                        class: "nav-link",
-                                        to: concatcp!(APP_BASE, "/register"), "Register"
-                                    }
-                                }
-                                div {
-                                    class: "nav-item",
-                                    Link {
-                                        class: "nav-link",
-                                        to: concatcp!(APP_BASE, "/login"), "Login"
-                                    }
-                                }
+                            class: "nav-item",
+                            Link {
+                                class: "nav-link",
+                                to: concatcp!(APP_BASE, "/register"), "Register"
+                            }
+                        }
+                        div {
+                            class: "nav-item",
+                            Link {
+                                class: "nav-link",
+                                to: concatcp!(APP_BASE, "/login"), "Login"
                             }
                         }
                     }
+                }
+            }
                 }
             }
         }
