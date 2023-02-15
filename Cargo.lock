@@ -1266,6 +1266,7 @@ dependencies = [
  "futures-util",
  "gloo-timers",
  "gt-core",
+ "itertools",
  "js-sys",
  "lazy_static",
  "log",

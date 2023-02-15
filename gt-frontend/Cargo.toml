@@ -16,6 +16,7 @@ fermi = "0.3.0"
 futures-util = "0.3.26"
 gloo-timers = "0.2.6"
 gt-core = { path = "../gt-core" }
+itertools = "0.10.5"
 js-sys = "0.3.60"
 lazy_static = "1.4.0"
 log = "0.4.17"

@@ -97,12 +97,10 @@ pub async fn get_exercise_set_prs_for_user(
     State(state): State<AppState>,
     Extension(user): Extension<user_login::Model>,
 ) -> Result<Json<models::PRQuery>> {
-    let (res_weighted_weight, res_weighted_reps) =
-        get_weighted_exercise_set_prs_for_user(&state, user.id).await?;
+    let res_weighted = get_weighted_exercise_set_prs_for_user(&state, user.id).await?;
 
     let res = models::PRQuery {
-        weighted_weight: res_weighted_weight,
-        weighted_reps: res_weighted_reps,
+        weighted: res_weighted,
     };
 
     Ok(Json(res))
@@ -111,10 +109,7 @@ pub async fn get_exercise_set_prs_for_user(
 pub async fn get_weighted_exercise_set_prs_for_user(
     state: &AppState,
     user_id: i32,
-) -> Result<(
-    Vec<models::PRWeightedQueryWeight>,
-    Vec<models::PRWeightedQueryReps>,
-)> {
+) -> Result<Vec<models::PRWeightedQuery>> {
     let q = ExerciseSet::find()
         .filter(exercise_set::Column::UserId.eq(user_id))
         .column_as(exercise_name::Column::Name, "name")
@@ -137,33 +132,22 @@ pub async fn get_weighted_exercise_set_prs_for_user(
         prs.push((exs.weight, exs.reps));
     }
 
-    let mut prs_weight = Vec::with_capacity(data_per_exercise.len());
-    let mut prs_reps = Vec::with_capacity(data_per_exercise.len());
+    let mut prs = Vec::with_capacity(data_per_exercise.len());
     for (name, mut data) in data_per_exercise.into_iter().sorted_by_key(|x| x.0.clone()) {
-        data.sort_by(|a, b| b.0.total_cmp(&a.0));
-        let pr_weight = data
-            .iter()
-            .map(|(weight, _)| *weight)
-            .unique_by(|f| OrderedFloat(*f))
+        data.sort_by(|a, b| b.0.total_cmp(&a.0).then(b.1.cmp(&a.1)));
+        let pr = data
+            .into_iter()
+            .unique_by(|(weight, reps)| (OrderedFloat(*weight), *reps))
             .take(3)
             .collect();
 
-        data.sort_by(|a, b| b.1.cmp(&a.1));
-        let pr_reps = data
-            .iter()
-            .map(|(_, reps)| *reps)
-            .unique()
-            .take(3)
-            .collect();
-
-        prs_weight.push(models::PRWeightedQueryWeight {
+        prs.push(models::PRWeightedQuery {
             name: name.clone(),
-            pr_weight,
+            pr,
         });
-        prs_reps.push(models::PRWeightedQueryReps { name, pr_reps });
     }
 
-    Ok((prs_weight, prs_reps))
+    Ok(prs)
 }
 
 pub async fn get_weighted_exercise_sets_for_user(

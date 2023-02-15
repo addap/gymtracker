@@ -1,12 +1,13 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use fermi::use_read;
-use gt_core::models;
+use itertools::join;
 use log::info;
 
 use crate::messages::{MessageProps, UIMessage};
 use crate::request_ext::RequestExt;
 use crate::{api, auth::ACTIVE_AUTH_TOKEN};
+use gt_core::models;
 
 pub fn PRPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
@@ -39,14 +40,10 @@ pub fn PRPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
     let content = match fetch.value() {
         Some(Some(prs)) => {
-            let prlist_weight = prs.weighted_weight.iter().map(|pr| {
+            let prlist_weighted = prs.weighted.iter().map(|pr| {
                 rsx! {
-                    li { format!("{}: {:?}", pr.name.clone(), pr.pr_weight.clone()) }
-                }
-            });
-            let prlist_reps = prs.weighted_reps.iter().map(|pr| {
-                rsx! {
-                    li { format!("{}: {:?}", pr.name.clone(), pr.pr_reps.clone()) }
+                    li { format!("{}: [ {} ]", pr.name.clone(), join(pr.pr.iter()
+                            .map(|(weight, reps)| format!("{:.1} x {}", weight, reps)), " | ")) }
                 }
             });
             rsx! {
@@ -55,9 +52,7 @@ pub fn PRPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     "Refresh"
                 }
                 p { "By Weight" }
-                ul { prlist_weight }
-                p { "By Reps" }
-                ul { prlist_reps }
+                ul { prlist_weighted }
             }
         }
         _ => {
