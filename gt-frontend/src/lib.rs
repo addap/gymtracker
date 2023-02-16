@@ -79,6 +79,7 @@ pub fn app(cx: Scope) -> Element {
                 div {
                     // In order for the messages to be positioned below the navbar we wrap everything after the navbar
                     // in a `position: relative` div.
+                    // TODO messages should actually be sticky below the navbar instead of absolute.
                     style: "position: relative",
                     div {
                         style: "position: absolute; right: 0px; top: 0px; z-index: 99999",

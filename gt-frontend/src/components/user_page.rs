@@ -18,14 +18,19 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let muscle_mass = use_state(&cx, || 0.0);
     let body_fat = use_state(&cx, || 0.0);
 
+    let body_height_latest = use_state(&cx, || 0.0);
+    let body_weight_latest = use_state(&cx, || 0.0);
+    let muscle_mass_latest = use_state(&cx, || 0.0);
+    let body_fat_latest = use_state(&cx, || 0.0);
+
     let fetch = use_future(&cx, (), |()| {
         to_owned![
             auth_token,
             display_name,
-            body_height,
-            body_weight,
-            muscle_mass,
-            body_fat
+            body_height_latest,
+            body_weight_latest,
+            muscle_mass_latest,
+            body_fat_latest
         ];
         let display_message = cx.props.display_message.clone();
 
@@ -44,10 +49,10 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             match res {
                 Ok(user_info) => {
                     display_name.set(user_info.display_name);
-                    body_weight.set(user_info.weight.unwrap_or(0.0));
-                    body_height.set(user_info.height.unwrap_or(0.0));
-                    muscle_mass.set(user_info.muscle_mass.unwrap_or(0.0));
-                    body_fat.set(user_info.body_fat.unwrap_or(0.0));
+                    body_weight_latest.set(user_info.weight.unwrap_or(0.0));
+                    body_height_latest.set(user_info.height.unwrap_or(0.0));
+                    muscle_mass_latest.set(user_info.muscle_mass.unwrap_or(0.0));
+                    body_fat_latest.set(user_info.body_fat.unwrap_or(0.0));
                 }
                 Err(e) => {
                     display_message.send(e);
@@ -118,9 +123,23 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         class: "bg-body-tertiary my-2 p-2",
         div {
             class: "row gap-1",
-            p {
+            h3 {
                 class: "col-12",
-                "Body Info (set to 0 to not update)"
+                "Body Info"
+            }
+            h5 {
+                class: "col-12",
+                "(set to 0 to not update)"
+            }
+            div {
+                class: "col-12",
+                p { "Current Body Info" }
+                ul {
+                    li { format!("Bodyweight: {} kg", body_weight_latest.current()) }
+                    li { format!("Height: {} cm", body_height_latest.current()) }
+                    li { format!("Muscle Mass: {} kg", muscle_mass_latest.current()) }
+                    li { format!("Body Fat: {} %", body_fat_latest.current()) }
+                }
             }
             div {
                 class: "form-group col-12 col-sm-2",
@@ -209,7 +228,11 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                             body_height,
                             body_weight,
                             muscle_mass,
-                            body_fat
+                            body_fat,
+                            body_height_latest,
+                            body_weight_latest,
+                            muscle_mass_latest,
+                            body_fat_latest
                         ];
                         let display_message = cx.props.display_message.clone();
 
@@ -238,6 +261,23 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                             match res {
                                 Ok(()) => {
                                     display_message.send(UIMessage::info(format!("Updated user info.")));
+
+                                    if let Some(new_body_height) = update_if_nonzero(*body_height.current()) {
+                                        body_height_latest.set(new_body_height);
+                                    }
+                                    if let Some(new_body_weight) = update_if_nonzero(*body_weight.current()) {
+                                        body_weight_latest.set(new_body_weight);
+                                    }
+                                    if let Some(new_muscle_mass) = update_if_nonzero(*muscle_mass.current()) {
+                                        muscle_mass_latest.set(new_muscle_mass);
+                                    }
+                                    if let Some(new_body_fat) = update_if_nonzero(*body_fat.current()) {
+                                        body_fat_latest.set(new_body_fat);
+                                    }
+                                    body_height.set(0.0);
+                                    body_weight.set(0.0);
+                                    muscle_mass.set(0.0);
+                                    body_fat.set(0.0);
                                 }
                                 Err(e) => display_message.send(e)
                             }
