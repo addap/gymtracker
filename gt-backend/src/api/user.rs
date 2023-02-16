@@ -102,41 +102,7 @@ pub async fn get_user_info(
     State(state): State<AppState>,
     Extension(user): Extension<user_login::Model>,
 ) -> Result<Json<models::UserInfoQuery>> {
-    let user_info = user
-        .find_related(UserInfo)
-        .one(&state.conn)
-        .await?
-        .ok_or(AppError::ResourceNotFound)?;
-
-    // TODO how to to nested lets in sea-orm?
-    // let res = UserInfoTs::find()
-    //     .column_as(Expr::value(user_info.display_name), "display_name")
-    //     .column_as(
-    //         Expr::some(
-    //             UserInfoTs::find()
-    //                 .filter(user_info_ts::Column::UserId.eq(user.id))
-    //                 .filter(user_info_ts::Column::Height.is_not_null())
-    //                 .order_by_desc(user_info_ts::Column::CreatedAt)
-    //                 .to_owned(),
-    //         ),
-    //         "height",
-    //     )
-    //     .column_as(xxx, "height")
-    //     .column_as(xxx, "height")
-    //     .column_as(xxx, "height")
-    //     .into_model::<models::UserInfoQuery>()
-    //     .order_by_desc(user_info_ts::Column::CreatedAt)
-    //     .one(&state.conn)
-    //     .await?;
-
-    let res = models::UserInfoQuery {
-        display_name: user_info.display_name,
-        height: None,
-        weight: None,
-        muscle_mass: None,
-        body_fat: None,
-    };
-
+    let res = db::get_user_info(user, &state.conn).await?;
     Ok(Json(res))
 }
 

@@ -1,6 +1,7 @@
 use chrono::Utc;
 use email_address::EmailAddress;
 use http::StatusCode;
+use migration::{Alias, Expr, PostgresQueryBuilder, Query, SimpleExpr, SubQueryStatement};
 use pbkdf2::{
     password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     Pbkdf2,
@@ -156,6 +157,114 @@ pub async fn get_exercise_sets(
             }
         })
         .collect::<Result<Vec<_>>>()?;
+
+    Ok(res)
+}
+
+pub async fn get_user_info(
+    user: user_login::Model,
+    conn: &DatabaseConnection,
+) -> Result<models::UserInfoQuery> {
+    let user_info = user
+        .find_related(UserInfo)
+        .one(conn)
+        .await?
+        .ok_or(AppError::ResourceNotFound)?;
+
+    // Pieced together from documentation and implementation of sea-query. I did not see an abstraction for a simple subquery that was
+    // not part of an `IN` or other expressions so I use the constructor directly.
+    // It implements a statement like this, in order to get the latest value for each of muscle_mass, body_fat, ...
+    // SELECT
+    //     (SELECT height FROM user_info_ts WHERE height IS NOT NULL ORDER BY created_at DESC LIMIT 1) AS height,
+    //     (SELECT muscle_mass FROM user_info_ts WHERE muscle_mass IS NOT NULL ORDER BY created_at DESC LIMIT 1) AS muscle_mass
+    //     ...
+    let q = Query::select()
+        .expr_as(
+            SimpleExpr::SubQuery(
+                None,
+                Box::new(SubQueryStatement::SelectStatement(
+                    Query::select()
+                        .expr(Expr::value(user_info.display_name))
+                        .to_owned(),
+                )),
+            ),
+            Alias::new("display_name"),
+        )
+        .expr_as(
+            SimpleExpr::SubQuery(
+                None,
+                Box::new(SubQueryStatement::SelectStatement(
+                    Query::select()
+                        .column((user_info_ts::Entity, user_info_ts::Column::Height))
+                        .from(user_info_ts::Entity)
+                        .and_where(user_info_ts::Column::UserId.eq(user.id))
+                        .and_where(user_info_ts::Column::Height.is_not_null())
+                        .order_by(user_info_ts::Column::CreatedAt, Order::Desc)
+                        .limit(1)
+                        .to_owned(),
+                )),
+            ),
+            Alias::new("height"),
+        )
+        .expr_as(
+            SimpleExpr::SubQuery(
+                None,
+                Box::new(SubQueryStatement::SelectStatement(
+                    Query::select()
+                        .column((user_info_ts::Entity, user_info_ts::Column::Weight))
+                        .from(user_info_ts::Entity)
+                        .and_where(user_info_ts::Column::UserId.eq(user.id))
+                        .and_where(user_info_ts::Column::Weight.is_not_null())
+                        .order_by(user_info_ts::Column::CreatedAt, Order::Desc)
+                        .limit(1)
+                        .to_owned(),
+                )),
+            ),
+            Alias::new("weight"),
+        )
+        .expr_as(
+            SimpleExpr::SubQuery(
+                None,
+                Box::new(SubQueryStatement::SelectStatement(
+                    Query::select()
+                        .column((user_info_ts::Entity, user_info_ts::Column::MuscleMass))
+                        .from(user_info_ts::Entity)
+                        .and_where(user_info_ts::Column::UserId.eq(user.id))
+                        .and_where(user_info_ts::Column::MuscleMass.is_not_null())
+                        .order_by(user_info_ts::Column::CreatedAt, Order::Desc)
+                        .limit(1)
+                        .to_owned(),
+                )),
+            ),
+            Alias::new("muscle_mass"),
+        )
+        .expr_as(
+            SimpleExpr::SubQuery(
+                None,
+                Box::new(SubQueryStatement::SelectStatement(
+                    Query::select()
+                        .column((user_info_ts::Entity, user_info_ts::Column::BodyFat))
+                        .from(user_info_ts::Entity)
+                        .and_where(user_info_ts::Column::UserId.eq(user.id))
+                        .and_where(user_info_ts::Column::BodyFat.is_not_null())
+                        .order_by(user_info_ts::Column::CreatedAt, Order::Desc)
+                        .limit(1)
+                        .to_owned(),
+                )),
+            ),
+            Alias::new("body_fat"),
+        )
+        .to_owned();
+
+    log::info!("{}", q.to_string(PostgresQueryBuilder));
+
+    let res =
+        models::UserInfoQuery::find_by_statement(StatementBuilder::build(&q, &DbBackend::Postgres))
+            .one(conn)
+            .await?
+            .unwrap();
+
+    log::info!("{:#?}", res);
 
     Ok(res)
 }
