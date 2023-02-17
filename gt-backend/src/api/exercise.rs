@@ -6,7 +6,7 @@ use ordered_float::OrderedFloat;
 use sea_orm::*;
 use std::collections::HashMap;
 
-use crate::{db, AppState, Result};
+use crate::{db, AppError, AppState, Result};
 use gt_core::entities::{prelude::*, *};
 use gt_core::models;
 
@@ -51,6 +51,9 @@ pub async fn add_exercise_set_for_user(
         .await?;
 
     let name_id = if let Some(name) = opt_name {
+        if Ok(payload.kind()) != name.kind.try_into() {
+            return Err(AppError::ValidationError);
+        }
         name.id
     } else {
         let new_name = exercise_name::ActiveModel {
