@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+use chrono::{Local, NaiveDateTime, TimeZone};
 use dioxus::prelude::*;
 use derive_more::Deref;
 use fermi::{use_read, use_atom_state, Atom};
@@ -36,6 +37,7 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
     let w_exercise_set_name = use_atom_state(&cx, W_EXERCISE_SET_NAME);
     let w_exercise_set_weight = use_atom_state(&cx, W_EXERCISE_SET_WEIGHT);
     let w_exercise_set_reps = use_state(&cx, || 0);
+    let w_exercise_set_date = use_state(&cx, || Local::now().naive_local().format("%Y-%m-%dT%H:%M").to_string());
 
     let names_datalist = cx.props.exercise_names.iter()
         .filter(|exn| exn.kind == models::ExerciseKind::Weighted)
@@ -114,10 +116,34 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                 }
                 div { class: "w-100" }
                 div {
+                    class: "form-group col-12 col-sm-auto",
+                    label {
+                        r#for: "w-ecercise-set-date",
+                        "Date"
+                    }
+                    input {
+                        class: "form-control",
+                        id: "w-exercise-set-date",
+                        r#type: "datetime-local",
+                        value: "{w_exercise_set_date}",
+                        oninput: move |evt| {
+                            w_exercise_set_date.set(evt.value.clone())
+                        }
+                    }
+                    button {
+                        class: "btn",
+                        onclick: move |_| {
+                            w_exercise_set_date.set(Local::now().naive_local().format("%Y-%m-%dT%H:%M").to_string())
+                        },
+                        "🕒"
+                    }
+                }
+                div { class: "w-100" }
+                div {
                     button {
                         class: "col-3 col-sm-1 btn btn-sm btn-outline-success",
                         onclick: move |_| cx.spawn({
-                            to_owned![w_exercise_set_name, w_exercise_set_reps, w_exercise_set_weight, auth_token];
+                            to_owned![w_exercise_set_name, w_exercise_set_reps, w_exercise_set_weight, w_exercise_set_date, auth_token];
                             let fetch_names = cx.props.fetch_names.clone();
                             let display_message = cx.props.display_message.clone();
                             
@@ -126,10 +152,16 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                                 
                                 if !w_exercise_set_name.current().is_empty()
                                 && *w_exercise_set_reps.current() > 0 {
+                                    // convert the datetime-local into a utc datetime string
+                                    let created_at = NaiveDateTime::parse_from_str(w_exercise_set_date.current().as_str(), "%Y-%m-%dT%H:%M").unwrap();
+                                    let created_at = Local.from_local_datetime(&created_at).unwrap();
+    
+
                                     let exs: models::ExerciseSet = (models::ExerciseSetWeighted {
                                         name: w_exercise_set_name.current().0.clone(),
                                         reps: *w_exercise_set_reps.current(),
                                         weight: *w_exercise_set_weight.current(),
+                                        created_at: created_at.naive_utc().format("%Y-%m-%dT%H:%M").to_string(),
                                     }).into();
 
                                     let res = client.post(api::EXERCISE_SET.as_str())
@@ -167,6 +199,7 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
     let b_exercise_set_name = use_atom_state(&cx, B_EXERCISE_SET_NAME);
     let b_exercise_set_reps = use_state(&cx, || 0);
+    let b_exercise_set_date = use_state(&cx, || Local::now().naive_local().format("%Y-%m-%dT%H:%M").to_string());
 
     let names_datalist = cx.props.exercise_names.iter()
         .filter(|exn| exn.kind == models::ExerciseKind::Bodyweight)
@@ -226,10 +259,34 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                 }
                 div { class: "w-100" }
                 div {
+                    class: "form-group col-12 col-sm-auto",
+                    label {
+                        r#for: "b-ecercise-set-date",
+                        "Date"
+                    }
+                    input {
+                        class: "form-control",
+                        id: "b-exercise-set-date",
+                        r#type: "datetime-local",
+                        value: "{b_exercise_set_date}",
+                        oninput: move |evt| {
+                            b_exercise_set_date.set(evt.value.clone())
+                        }
+                    }
+                    button {
+                        class: "btn",
+                        onclick: move |_| {
+                            b_exercise_set_date.set(Local::now().naive_local().format("%Y-%m-%dT%H:%M").to_string())
+                        },
+                        "🕒"
+                    }
+                }
+                div { class: "w-100" }
+                div {
                     button {
                         class: "col-3 col-sm-1 btn btn-sm btn-outline-success",
                         onclick: move |_| cx.spawn({
-                            to_owned![b_exercise_set_name, b_exercise_set_reps, auth_token];
+                            to_owned![b_exercise_set_name, b_exercise_set_reps, b_exercise_set_date, auth_token];
                             let fetch_names = cx.props.fetch_names.clone();
                             let display_message = cx.props.display_message.clone();
                             
@@ -238,9 +295,14 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                                 
                                 if !b_exercise_set_name.current().is_empty() 
                                 && *b_exercise_set_reps.current() > 0 {
+                                    // convert the datetime-local into a utc datetime string
+                                    let created_at = NaiveDateTime::parse_from_str(b_exercise_set_date.current().as_str(), "%Y-%m-%dT%H:%M").unwrap();
+                                    let created_at = Local.from_local_datetime(&created_at).unwrap();
+
                                     let exs: models::ExerciseSet = (models::ExerciseSetBodyweight {
                                         name: b_exercise_set_name.current().0.clone(),
                                         reps: *b_exercise_set_reps.current(),
+                                        created_at: created_at.naive_utc().format("%Y-%m-%dT%H:%M").to_string(),
                                     }).into();
 
                                     let res = client.post(api::EXERCISE_SET.as_str())

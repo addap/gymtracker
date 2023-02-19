@@ -1,5 +1,7 @@
 use anyhow::anyhow;
+use chrono::{NaiveDateTime, Utc};
 use derive_more::From;
+use log::info;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 #[cfg(not(target_arch = "wasm32"))]
 use sea_orm::{DeriveActiveEnum, EnumIter, FromQueryResult};
@@ -31,12 +33,14 @@ pub struct ExerciseSetWeighted {
     pub name: String,
     pub reps: i32,
     pub weight: f64,
+    pub created_at: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct ExerciseSetBodyweight {
     pub name: String,
     pub reps: i32,
+    pub created_at: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
@@ -131,6 +135,16 @@ impl ExerciseSet {
             ExerciseSet::Weighted(_) => ExerciseKind::Weighted,
             ExerciseSet::Bodyweight(_) => ExerciseKind::Bodyweight,
         }
+    }
+
+    pub fn created_at(&self) -> NaiveDateTime {
+        let created_at = match self {
+            ExerciseSet::Weighted(exs) => &exs.created_at,
+            ExerciseSet::Bodyweight(exs) => &exs.created_at,
+        };
+        let x = NaiveDateTime::parse_from_str(created_at.as_str(), "%Y-%m-%dT%H:%M");
+        info!("{:?}", x);
+        x.unwrap_or(Utc::now().naive_utc())
     }
 }
 

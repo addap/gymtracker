@@ -1246,6 +1246,7 @@ dependencies = [
  "derive_more",
  "hmac",
  "jwt",
+ "log",
  "num_enum",
  "sea-orm",
  "serde",

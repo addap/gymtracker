@@ -68,7 +68,6 @@ pub async fn add_exercise_set_for_user(
     let new_exercise_set = exercise_set::ActiveModel {
         user_id: ActiveValue::Set(user.id),
         name_id: ActiveValue::Set(name_id),
-        created_at: ActiveValue::Set(Utc::now().naive_utc()),
         ..payload.into()
     };
 
