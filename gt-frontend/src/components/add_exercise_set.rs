@@ -66,6 +66,7 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                         list: "w-exercise-names-list",
                         value: "{w_exercise_set_name.0}",
                         placeholder: "exercise name",
+                        autocomplete: "off",
                         oninput: move |evt| w_exercise_set_name.set(Wrapper1(evt.value.clone())),
                     }
                     datalist {
@@ -196,6 +197,7 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                         list: "b-exercise-names-list",
                         value: "{b_exercise_set_name.0}",
                         placeholder: "exercise name",
+                        autocomplete: "off",
                         oninput: move |evt| b_exercise_set_name.set(Wrapper2(evt.value.clone())),
                     }
                     datalist {
