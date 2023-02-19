@@ -3,7 +3,7 @@ use axum::{
     http::StatusCode,
     middleware,
     response::Redirect,
-    routing::{get, get_service, post},
+    routing::{delete, get, get_service, post},
     Router, Server,
 };
 use gt_core::APP_BASE;
@@ -62,7 +62,8 @@ async fn main() -> anyhow::Result<()> {
         .route(
             "/exercise/set",
             get(api::exercise::get_all_exercise_sets_for_user)
-                .post(api::exercise::add_exercise_set_for_user),
+                .post(api::exercise::add_exercise_set_for_user)
+                .delete(api::exercise::delete_exercise_set_for_user),
         )
         .route(
             "/exercise/set/:page_size",

@@ -51,7 +51,7 @@ pub fn HistoryPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let content = {
         let hlist = history.get().iter().map(|exs| {
             rsx! {
-                li { c::ExerciseSet { exs: exs } }
+                c::ExerciseSet { exs: exs, display_message: cx.props.display_message }
             }
         });
         rsx! {
@@ -61,7 +61,10 @@ pub fn HistoryPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             }
             if !history.current().is_empty() {
                 rsx!{
-                    ul { hlist }
+                    ul {
+                        class: "list-group list-group-flush",
+                        hlist
+                    }
                 }
             }
         }

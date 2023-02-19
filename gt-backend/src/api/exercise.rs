@@ -198,3 +198,16 @@ pub async fn get_bodyweight_exercise_sets_for_user(
 
     Ok(res)
 }
+
+pub async fn delete_exercise_set_for_user(
+    State(state): State<AppState>,
+    Extension(user): Extension<user_login::Model>,
+    Json(payload): Json<models::ExerciseSetDelete>,
+) -> Result<Json<()>> {
+    let res = ExerciseSet::delete_by_id(payload.id)
+        .filter(exercise_set::Column::UserId.eq(user.id))
+        .exec(&state.conn)
+        .await?;
+
+    Ok(Json(()))
+}

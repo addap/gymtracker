@@ -45,6 +45,11 @@ pub enum ExerciseSet {
     Bodyweight(ExerciseSetBodyweight),
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
+pub struct ExerciseSetDelete {
+    pub id: i32,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[cfg_attr(not(target_arch = "wasm32"), derive(FromQueryResult))]
 pub struct ExerciseSetJoinQuery {
@@ -102,6 +107,15 @@ pub struct PRQuery {
 pub struct MergeNames {
     pub to_delete: String,
     pub to_expand: String,
+}
+
+impl ExerciseSetQuery {
+    pub fn id(&self) -> i32 {
+        match self {
+            ExerciseSetQuery::Weighted(exs) => exs.id,
+            ExerciseSetQuery::Bodyweight(exs) => exs.id,
+        }
+    }
 }
 
 impl ExerciseSet {

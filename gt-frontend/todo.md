@@ -1,0 +1,4 @@
+- [X] Delete history items
+- [ ] Date input on exercise submit
+- [ ] CSV export
+- [X] Autocomplete off for datalist
