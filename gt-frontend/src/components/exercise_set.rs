@@ -90,11 +90,11 @@ pub fn ExerciseSet<'a>(cx: Scope<'a, ExerciseSetProps<'a>>) -> Element<'a> {
             div {
                 class: "row",
                 div {
-                    class: "col-auto",
+                    class: "col",
                     info
                 }
                 div {
-                    class: "col-auto",
+                    class: "col-auto d-flex align-items-center",
                     button {
                         onclick: move |_| cx.spawn({
                             to_owned![auth_token, deleted];
