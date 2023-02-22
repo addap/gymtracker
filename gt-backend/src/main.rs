@@ -3,7 +3,7 @@ use axum::{
     http::StatusCode,
     middleware,
     response::Redirect,
-    routing::{delete, get, get_service, post},
+    routing::{get, get_service, post},
     Router, Server,
 };
 use gt_core::APP_BASE;
@@ -28,7 +28,7 @@ async fn main() -> anyhow::Result<()> {
     let port = env::var("PORT").expect("PORT is not set.");
     let secret = env::var("SECRET").expect("SECRET is not set.");
     let server_url = format!("{}:{}", host, port);
-    let populate_data = db::PopulateData {
+    let populate_data = db::populate::PopulateData {
         superuser_name: env::var("SUPERUSER_NAME").expect("SUPERUSER_NAME is not set."),
         superuser_password: env::var("SUPERUSER_PASSWORD").expect("SUPERUSER_PASSWORD is not set."),
         superuser_email: env::var("SUPERUSER_EMAIL").expect("SUPERUSER_EMAIL is not set."),
@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Migrate and populate database
     Migrator::up(&state.conn, None).await?;
-    db::populate(populate_data, &state).await?;
+    db::populate::populate(populate_data, &state).await?;
 
     let unauth_api_routes = Router::new()
         .route("/user/login", post(api::user::login))
@@ -76,6 +76,10 @@ async fn main() -> anyhow::Result<()> {
         .route(
             "/user/info",
             get(api::user::get_user_info).post(api::user::change_user_info),
+        )
+        .route(
+            "/user/picture",
+            get(api::user::get_user_picture).post(api::user::change_user_picture),
         )
         .route(
             "/user/info-ts",

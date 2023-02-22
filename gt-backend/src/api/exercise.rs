@@ -82,7 +82,7 @@ pub async fn get_all_exercise_sets_for_user(
     State(state): State<AppState>,
     Extension(user): Extension<user_login::Model>,
 ) -> Result<Json<Vec<models::ExerciseSetQuery>>> {
-    let res = db::get_exercise_sets(user.id, None, &state.conn).await?;
+    let res = db::exercise::get_exercise_sets(user.id, None, &state.conn).await?;
     Ok(Json(res))
 }
 
@@ -91,7 +91,7 @@ pub async fn get_paged_exercise_sets_for_user(
     Extension(user): Extension<user_login::Model>,
     Path(page_size): Path<u64>,
 ) -> Result<Json<Vec<models::ExerciseSetQuery>>> {
-    let res = db::get_exercise_sets(user.id, Some(page_size), &state.conn).await?;
+    let res = db::exercise::get_exercise_sets(user.id, Some(page_size), &state.conn).await?;
     Ok(Json(res))
 }
 

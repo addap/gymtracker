@@ -16,11 +16,11 @@ pub fn Navbar(cx: Scope) -> Element {
             nav {
                 class: "navbar navbar-expand bg-body-secondary",
                 div {
-                    class: "container",
+                    // class: "container-fluid",
             if is_logged_in(&cx) {
                 rsx!{
                     div {
-                        class: "navbar-nav",
+                        class: "me-auto navbar-nav",
                         div {
                             class: "nav-item",
                             div {

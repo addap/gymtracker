@@ -49,9 +49,13 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
 
     cx.render(rsx! {
         div {
-            class: "bg-body-tertiary my-2 p-2",
-            div {
-                class: "row gap-1",
+            // my-3: vertical margin 3
+            // p-2: h&v padding 2
+            class: "bg-body-tertiary my-3 p-2",
+            form {
+                // g-1: gutters 1
+                // g-sm-2: gutters at the small breakpoint 2
+                class: "row g-1 g-sm-2",
                 p { 
                     class: "col-12",
                     "Weighted Exercise Set" 
@@ -116,7 +120,7 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                 }
                 div { class: "w-100" }
                 div {
-                    class: "form-group col-12 col-sm-auto",
+                    class: "form-group col col-sm-auto",
                     label {
                         r#for: "w-ecercise-set-date",
                         "Date"
@@ -130,8 +134,12 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                             w_exercise_set_date.set(evt.value.clone())
                         }
                     }
+                }
+                div {
+                    class: "col-auto d-flex align-items-end",
                     button {
-                        class: "btn",
+                        r#type: "button",
+                        class: "btn btn-outline-info",
                         onclick: move |_| {
                             w_exercise_set_date.set(Local::now().naive_local().format("%Y-%m-%dT%H:%M").to_string())
                         },
@@ -141,6 +149,7 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                 div { class: "w-100" }
                 div {
                     button {
+                        r#type: "button",
                         class: "col-3 col-sm-1 btn btn-sm btn-outline-success",
                         onclick: move |_| cx.spawn({
                             to_owned![w_exercise_set_name, w_exercise_set_reps, w_exercise_set_weight, w_exercise_set_date, auth_token];
@@ -211,9 +220,9 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
 
     cx.render(rsx! {
         div {
-            class: "bg-body-tertiary my-2 p-2",
-            div {
-                class: "row gap-1",
+            class: "bg-body-tertiary my-3 p-2",
+            form {
+                class: "row g-1 g-sm-2",
                 p { 
                     class: "col-12", 
                     "Bodyweight Exercise Set" 
@@ -259,7 +268,7 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                 }
                 div { class: "w-100" }
                 div {
-                    class: "form-group col-12 col-sm-auto",
+                    class: "form-group col col-sm-auto",
                     label {
                         r#for: "b-ecercise-set-date",
                         "Date"
@@ -273,8 +282,12 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                             b_exercise_set_date.set(evt.value.clone())
                         }
                     }
+                }
+                div {
+                    class: "col-auto d-flex align-items-end",
                     button {
-                        class: "btn",
+                        r#type: "button",
+                        class: "btn btn-outline-info",
                         onclick: move |_| {
                             b_exercise_set_date.set(Local::now().naive_local().format("%Y-%m-%dT%H:%M").to_string())
                         },
@@ -284,6 +297,7 @@ pub fn AddExerciseSetBodyweight<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elem
                 div { class: "w-100" }
                 div {
                     button {
+                        r#type: "button",
                         class: "col-3 col-sm-1 btn btn-sm btn-outline-success",
                         onclick: move |_| cx.spawn({
                             to_owned![b_exercise_set_name, b_exercise_set_reps, b_exercise_set_date, auth_token];
