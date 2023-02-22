@@ -13,6 +13,7 @@ lazy_static! {
     pub static ref USER_REGISTER: String = api_url("/user/register");
     pub static ref USER_INFO: String = api_url("/user/info");
     pub static ref USER_INFO_TS: String = api_url("/user/info-ts");
+    pub static ref USER_PICTURE: String = api_url("/user/picture");
     pub static ref AUTH_CHECK: String = api_url("/auth/check");
     pub static ref MERGE_NAMES: String = api_url("/admin/merge-names");
 }

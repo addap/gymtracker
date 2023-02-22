@@ -1,13 +1,20 @@
-use axum::extract::{Json, State};
-use axum::Extension;
+use axum::{
+    body::StreamBody,
+    extract::{Json, State},
+    http::header,
+    response::IntoResponse,
+    Extension,
+};
 use chrono::Utc;
 use gt_core::models::UserAuth;
-use http::StatusCode;
+use http::{HeaderMap, StatusCode};
 use pbkdf2::{
     password_hash::{PasswordHash, PasswordVerifier},
     Pbkdf2,
 };
 use sea_orm::*;
+use tokio::io::AsyncReadExt;
+use tokio_util::io::ReaderStream;
 
 use crate::{db, AppError, AppState, Result};
 use gt_core::auth::create_token;
@@ -135,4 +142,53 @@ pub async fn get_user_info_ts(
     let res = user.find_related(UserInfoTs).all(&state.conn).await?;
 
     Ok(Json(res))
+}
+
+pub async fn get_user_picture(
+    State(state): State<AppState>,
+    Extension(user): Extension<user_login::Model>,
+) -> Result<impl IntoResponse> {
+    let user_info = user
+        .find_related(UserInfo)
+        .one(&state.conn)
+        .await?
+        .ok_or(AppError::ResourceNotFound)?;
+
+    if let Some(bytes) = user_info.photo {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            header::CONTENT_TYPE,
+            "text/toml; charset=utf-8".parse().unwrap(),
+        );
+        // headers.insertheader::CONTENT_DISPOSITION, "attachment; filename=\"Cargo.toml\"",
+
+        Ok((headers, bytes))
+    } else {
+        let mut file = match tokio::fs::File::open("gt-backend/static/default_picture.jpg").await {
+            Ok(file) => file,
+            Err(_) => return Err(AppError::ResourceNotFound),
+        };
+        let mut content = vec![];
+        file.read_to_end(&mut content).await.unwrap();
+        // // convert the `AsyncRead` into a `Stream`
+        // let stream = ReaderStream::new(file);
+        // // convert the `Stream` into an `axum::body::HttpBody`
+        // let body = StreamBody::new(stream);
+
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            header::CONTENT_TYPE,
+            "text/toml; charset=utf-8".parse().unwrap(),
+        );
+        // headers.insertheader::CONTENT_DISPOSITION, "attachment; filename=\"Cargo.toml\"",
+
+        Ok((headers, content))
+    }
+}
+
+pub async fn change_user_picture(
+    State(state): State<AppState>,
+    Extension(user): Extension<user_login::Model>,
+) -> Result<Json<()>> {
+    Ok(Json(()))
 }

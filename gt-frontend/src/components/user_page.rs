@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
 use fermi::use_read;
+use gloo_file::{Blob, ObjectUrl};
+use log::info;
 
 use crate::{
     api,
@@ -10,9 +12,16 @@ use crate::{
 };
 use gt_core::models;
 
+fn make_blob_url(bytes: &[u8]) -> ObjectUrl {
+    ObjectUrl::from(Blob::new(bytes))
+}
+
 pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
     let display_name = use_state(&cx, || "".to_string());
+    let user_picture_filename = use_state(&cx, || "".to_string());
+    let user_picture_blob = use_state(&cx, || make_blob_url(&[]));
+    let user_picture = use_state(&cx, || Vec::new());
     let body_height = use_state(&cx, || 0.0);
     let body_weight = use_state(&cx, || 0.0);
     let muscle_mass = use_state(&cx, || 0.0);
@@ -61,11 +70,41 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         }
     });
 
+    let fetch_image = use_future(&cx, (), |()| {
+        to_owned![auth_token, user_picture_blob];
+        //
+        async move {
+            let client = reqwest::Client::new();
+            let res = client
+                .get(api::USER_PICTURE.as_str())
+                .bearer_auth(auth_token.unwrap_or("".into()))
+                .send()
+                .await;
+
+            match res {
+                Ok(res) => match res.bytes().await {
+                    Ok(bytes) => {
+                        let url = make_blob_url(bytes.as_ref());
+                        // user_picture_blob.set(url);
+                    }
+                    Err(e) => {
+                        info!("{}", e);
+                    }
+                },
+                Err(e) => {
+                    info!("{}", e);
+                }
+            }
+        }
+    });
+
     let user_form = rsx! {
     div {
-        class: "bg-body-tertiary my-2 p-2",
-        div {
-            class: "row gap-1",
+        class: "bg-body-tertiary my-3 p-2",
+        form {
+            prevent_default: "onsubmit",
+            enctype: "multipart/form-data",
+            class: "row g-1 g-sm-2",
             p {
                 class: "col-12",
                 "User Info"
@@ -84,12 +123,58 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     oninput: move |evt| display_name.set(evt.value.clone()),
                 }
             }
+            div {
+                class: "form-group col-12 col-sm-auto",
+                label {
+                    r#for: "user-picture",
+                    "Picture"
+                }
+                input {
+                    class: "form-control",
+                    r#type: "file",
+                    id: "user-picture",
+                    value: "test",
+                    // value: "{user_picture_filename}",
+                    // placeholder: "picture",
+                    onchange: move |evt| cx.spawn({
+                        to_owned![user_picture, user_picture_filename, user_picture_blob];
+                        // info!("{:?}", evt.files);
+                        async move {
+                            info!("1");
+                            if let Some(formfiles) = evt.files.as_ref() {
+                            info!("2");
+                                if let Some(filename) = formfiles.files().get(0) {
+                            info!("3");
+                                    if let Some(bytes) = formfiles.read_file(filename.as_str()).await {
+                                        user_picture_filename.set(filename.clone());
+                                        let url = make_blob_url(&bytes);
+                                        info!("{:?}", bytes);
+                                        info!("{}", url.to_string());
+                                        user_picture_blob.set(url);
+                                        user_picture.set(bytes);
+                                    }
+                                }
+                            }
+                        }
+                    }),
+                }
+            }
+            div { class: "w-100" }
+            div {
+                class: "col-6 col-sm-2",
+                img {
+                    class: "img-fluid rounded",
+                    src: "{user_picture_blob.current().to_string()}",
+                    alt: "asd"
+                }
+            }
             div { class: "w-100" }
             div {
                 button {
+                    r#type: "button",
                     class: "col-3 col-sm-1 btn btn-sm btn-outline-success",
                     onclick: move |_| cx.spawn({
-                        to_owned![auth_token, display_name];
+                        to_owned![auth_token, display_name, user_picture];
                         let display_message = cx.props.display_message.clone();
 
                         async move {
@@ -100,13 +185,27 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                             };
 
                             let res = client.post(api::USER_INFO.as_str())
-                                .json(&user_info).bearer_auth(auth_token.unwrap_or("".into()))
+                                .json(&user_info)
+                                .bearer_auth(auth_token.clone().unwrap_or("".into()))
                                 .send().await
                                 .handle_result(UIMessage::error("Submitting user info failed.".to_string())).await;
 
                             match res {
                                 Ok(()) => {
                                     display_message.send(UIMessage::info(format!("Updated user info.")));
+                                }
+                                Err(e) => display_message.send(e)
+                            }
+
+                            let res = client.post(api::USER_PICTURE.as_str())
+                                .body((*user_picture.current()).clone())
+                                .bearer_auth(auth_token.unwrap_or("".into()))
+                                .send().await
+                                .handle_result(UIMessage::error("Submitting user picture failed.".to_string())).await;
+
+                            match res {
+                                Ok(()) => {
+                                    display_message.send(UIMessage::info(format!("Updated user picture.")));
                                 }
                                 Err(e) => display_message.send(e)
                             }
@@ -120,9 +219,9 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
     let user_form_ts = rsx! {
     div {
-        class: "bg-body-tertiary my-2 p-2",
-        div {
-            class: "row gap-1",
+        class: "bg-body-tertiary my-3 p-2",
+        form {
+            class: "row g-1 g-sm-2",
             h3 {
                 class: "col-12",
                 "Body Info"
@@ -142,7 +241,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 }
             }
             div {
-                class: "form-group col-12 col-sm-2",
+                class: "form-group col-12 col-sm-auto",
                 label {
                     r#for: "body-weight",
                     "Bodyweight (kg)"
@@ -161,7 +260,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 }
             }
             div {
-                class: "form-group col-12 col-sm-2",
+                class: "form-group col-12 col-sm-auto",
                 label {
                     r#for: "body-height",
                     "Height (cm)"
@@ -181,7 +280,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             }
             div { class: "w-100" }
             div {
-                class: "form-group col-12 col-sm-2",
+                class: "form-group col-12 col-sm-auto",
                 label {
                     r#for: "muscle-mass",
                     "Muscle Mass (kg)"
@@ -200,7 +299,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 }
             }
             div {
-                class: "form-group col-12 col-sm-2",
+                class: "form-group col-12 col-sm-auto",
                 label {
                     r#for: "body-fat",
                     "Body Fat (%)"
@@ -221,6 +320,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             div { class: "w-100" }
             div {
                 button {
+                    r#type: "button",
                     class: "col-3 col-sm-1 btn btn-sm btn-outline-success",
                     onclick: move |_| cx.spawn({
                         to_owned![
