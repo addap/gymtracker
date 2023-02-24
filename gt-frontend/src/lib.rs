@@ -30,6 +30,13 @@ extern "C" {
     static JS_PAGE_SIZE: i32;
 }
 
+#[wasm_bindgen]
+extern "C" {
+    fn attachToFile();
+    fn getFileString() -> String;
+    fn getFileStringReady() -> bool;
+}
+
 lazy_static! {
     static ref BANNER: String = JS_BANNER.clone();
     static ref MESSAGE_TIMEOUT: i64 = JS_MESSAGE_TIMEOUT.clone() as i64;

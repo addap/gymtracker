@@ -1,5 +1,5 @@
 use axum::{
-    body::StreamBody,
+    body::Bytes,
     extract::{Json, State},
     http::header,
     response::IntoResponse,
@@ -8,18 +8,21 @@ use axum::{
 use chrono::Utc;
 use gt_core::models::UserAuth;
 use http::{HeaderMap, StatusCode};
+use lazy_static::lazy_static;
 use pbkdf2::{
     password_hash::{PasswordHash, PasswordVerifier},
     Pbkdf2,
 };
 use sea_orm::*;
-use tokio::io::AsyncReadExt;
-use tokio_util::io::ReaderStream;
 
 use crate::{db, AppError, AppState, Result};
 use gt_core::auth::create_token;
 use gt_core::entities::{prelude::*, *};
 use gt_core::{models, models::AuthToken};
+
+lazy_static! {
+    static ref DEFAULT_PIC: Vec<u8> = include_bytes!("../../static/default_picture.jpg").to_vec();
+}
 
 /// Sign up new user and return an auth token on success.
 pub async fn register(
@@ -89,18 +92,15 @@ pub async fn change_user_info(
     Extension(user): Extension<user_login::Model>,
     Json(payload): Json<models::UserInfo>,
 ) -> Result<Json<()>> {
-    let old_user_info = user
+    let mut user_info: user_info::ActiveModel = user
         .find_related(UserInfo)
         .one(&state.conn)
         .await?
-        .ok_or(AppError::ResourceNotFound)?;
+        .ok_or(AppError::ResourceNotFound)?
+        .into();
 
-    let new_user_info = user_info::ActiveModel {
-        id: ActiveValue::Set(old_user_info.id),
-        display_name: ActiveValue::Set(payload.display_name),
-        ..Default::default()
-    };
-    new_user_info.update(&state.conn).await?;
+    user_info.display_name = ActiveValue::Set(payload.display_name);
+    user_info.update(&state.conn).await?;
 
     Ok(Json(()))
 }
@@ -158,18 +158,11 @@ pub async fn get_user_picture(
         let mut headers = HeaderMap::new();
         headers.insert(
             header::CONTENT_TYPE,
-            "text/toml; charset=utf-8".parse().unwrap(),
+            "application/octet-stream".parse().unwrap(),
         );
-        // headers.insertheader::CONTENT_DISPOSITION, "attachment; filename=\"Cargo.toml\"",
 
         Ok((headers, bytes))
     } else {
-        let mut file = match tokio::fs::File::open("gt-backend/static/default_picture.jpg").await {
-            Ok(file) => file,
-            Err(_) => return Err(AppError::ResourceNotFound),
-        };
-        let mut content = vec![];
-        file.read_to_end(&mut content).await.unwrap();
         // // convert the `AsyncRead` into a `Stream`
         // let stream = ReaderStream::new(file);
         // // convert the `Stream` into an `axum::body::HttpBody`
@@ -178,17 +171,28 @@ pub async fn get_user_picture(
         let mut headers = HeaderMap::new();
         headers.insert(
             header::CONTENT_TYPE,
-            "text/toml; charset=utf-8".parse().unwrap(),
+            "application/octet-stream".parse().unwrap(),
         );
-        // headers.insertheader::CONTENT_DISPOSITION, "attachment; filename=\"Cargo.toml\"",
 
-        Ok((headers, content))
+        // TODO can we avoid cloning here?
+        Ok((headers, DEFAULT_PIC.clone()))
     }
 }
 
 pub async fn change_user_picture(
     State(state): State<AppState>,
     Extension(user): Extension<user_login::Model>,
+    bytes: Bytes,
 ) -> Result<Json<()>> {
+    let mut user_info: user_info::ActiveModel = user
+        .find_related(UserInfo)
+        .one(&state.conn)
+        .await?
+        .ok_or(AppError::ResourceNotFound)?
+        .into();
+
+    user_info.photo = ActiveValue::Set(Some(bytes.to_vec()));
+    user_info.update(&state.conn).await?;
+
     Ok(Json(()))
 }

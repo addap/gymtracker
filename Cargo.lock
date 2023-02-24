@@ -1234,6 +1234,7 @@ dependencies = [
  "http",
  "hyper",
  "itertools",
+ "lazy_static",
  "log",
  "migration",
  "ordered-float 3.4.0",
@@ -1270,6 +1271,7 @@ dependencies = [
 name = "gt-frontend"
 version = "0.1.0"
 dependencies = [
+ "base64 0.21.0",
  "chrono",
  "const_format",
  "derive_more",

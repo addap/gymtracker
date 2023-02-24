@@ -13,6 +13,58 @@
 <body>
     <div id="main"> </div>
     <!-- <script src="./bootstrap.min.js" /> -->
+    <script>
+        var fileStringReady = false;
+        var fileString = "";
+
+        // when the file changes we write it to a global variable that we can get in Haskell
+        // and create an ImageBitmap to draw on the canvas
+        readFileString = function (evt) {
+            console.log("getting new file");
+            let file = evt.target.files[0];
+            let reader = new FileReader();
+            reader.addEventListener('load', function () {
+                fileString = reader.result.match(/data:.*?\/.*?;base64,(.*)/)[1];
+                fileStringReady = true;
+            });
+            fileStringReady = false;
+            reader.readAsDataURL(file);
+        }
+
+        function tryAttachToFile() {
+            let inp = document.getElementById('user-picture');
+            if (inp) {
+                inp.addEventListener('change', readFileString);
+            } else {
+                attachToFile();
+            }
+        }
+
+        // when the mutationobserver fires we know that the file input was created
+        // as long as we only create new nodes once
+        function attachToFile() {
+            setTimeout(tryAttachToFile, 100);
+        }
+
+        // wait until the window is loaded to start mutationobserver on body
+        // could also maybe put the script in the body so that the body exists when it's run
+        // window.onload = function () {
+        // let observer = new MutationObserver(attachToFile);
+        // let target = document.body;
+        // let options = { childList: true };
+        // observer.observe(target, options);
+        // }
+
+        console.log("setup complete");
+
+        function getFileString() {
+            fileStringReady = false;
+            return fileString;
+        }
+        function getFileStringReady() {
+            return fileStringReady;
+        }
+    </script>
 </body>
 
 </html>

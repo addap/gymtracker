@@ -2,7 +2,11 @@
 use dioxus::prelude::*;
 use fermi::use_read;
 use gloo_file::{Blob, ObjectUrl};
+use gloo_timers::future::TimeoutFuture;
+// use js_sys::{JsString, Reflect};
 use log::info;
+// use wasm_bindgen::JsCast;
+use base64::{engine::general_purpose, Engine as _};
 
 use crate::{
     api,
@@ -12,6 +16,15 @@ use crate::{
 };
 use gt_core::models;
 
+const js_grab_file: &str = r#"function(evt) {
+    let file = evt.target.files[0];
+    let reader = new FileReader();
+    reader.addEventListener('load', function() {
+        fileString = reader.result.match(/data:.*?\/.*?;base64,(.*)/)[1];
+    });
+    reader.readAsDataURL(file);
+};"#;
+
 fn make_blob_url(bytes: &[u8]) -> ObjectUrl {
     ObjectUrl::from(Blob::new(bytes))
 }
@@ -19,8 +32,8 @@ fn make_blob_url(bytes: &[u8]) -> ObjectUrl {
 pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
     let display_name = use_state(&cx, || "".to_string());
-    let user_picture_filename = use_state(&cx, || "".to_string());
-    let user_picture_blob = use_state(&cx, || make_blob_url(&[]));
+    let user_picture_objecturl = use_state(&cx, || ObjectUrl::from(Blob::new("")));
+    let user_picture_blob = use_state(&cx, || "".to_string());
     let user_picture = use_state(&cx, || Vec::new());
     let body_height = use_state(&cx, || 0.0);
     let body_weight = use_state(&cx, || 0.0);
@@ -71,7 +84,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     });
 
     let fetch_image = use_future(&cx, (), |()| {
-        to_owned![auth_token, user_picture_blob];
+        to_owned![auth_token, user_picture_blob, user_picture_objecturl];
         //
         async move {
             let client = reqwest::Client::new();
@@ -85,7 +98,8 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 Ok(res) => match res.bytes().await {
                     Ok(bytes) => {
                         let url = make_blob_url(bytes.as_ref());
-                        // user_picture_blob.set(url);
+                        user_picture_blob.set(url.to_string());
+                        user_picture_objecturl.set(url);
                     }
                     Err(e) => {
                         info!("{}", e);
@@ -96,6 +110,10 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 }
             }
         }
+    });
+
+    let read_js_var = use_future(&cx, (), |()| async move {
+        crate::attachToFile();
     });
 
     let user_form = rsx! {
@@ -134,29 +152,48 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     r#type: "file",
                     id: "user-picture",
                     value: "test",
-                    // value: "{user_picture_filename}",
-                    // placeholder: "picture",
                     onchange: move |evt| cx.spawn({
-                        to_owned![user_picture, user_picture_filename, user_picture_blob];
-                        // info!("{:?}", evt.files);
+                        to_owned![user_picture, user_picture_blob];
+
                         async move {
-                            info!("1");
-                            if let Some(formfiles) = evt.files.as_ref() {
-                            info!("2");
-                                if let Some(filename) = formfiles.files().get(0) {
-                            info!("3");
-                                    if let Some(bytes) = formfiles.read_file(filename.as_str()).await {
-                                        user_picture_filename.set(filename.clone());
-                                        let url = make_blob_url(&bytes);
-                                        info!("{:?}", bytes);
-                                        info!("{}", url.to_string());
-                                        user_picture_blob.set(url);
-                                        user_picture.set(bytes);
-                                    }
+                            loop {
+                                TimeoutFuture::new(100).await;
+                                if crate::getFileStringReady() {
+                                    break;
                                 }
                             }
+                            let blob_data = crate::getFileString();
+                            let blob_url = format!("data:image/jpg;base64,{}", blob_data);
+
+                            user_picture_blob.set(blob_url);
+                            let bytes = general_purpose::STANDARD.decode(blob_data).unwrap();
+                            user_picture.set(bytes);
                         }
-                    }),
+                    })
+                    // value: "{user_picture_filename}",
+                    // placeholder: "picture",
+                    // "onchange": js_grab_file,
+                    // onchange: move |evt| cx.spawn({
+                    //     to_owned![user_picture, user_picture_filename, user_picture_blob];
+                    //     // info!("{:?}", evt.files);
+                    //     async move {
+                    //         info!("1");
+                    //         if let Some(formfiles) = evt.files.as_ref() {
+                    //         info!("2");
+                    //             if let Some(filename) = formfiles.files().get(0) {
+                    //         info!("3");
+                    //                 if let Some(bytes) = formfiles.read_file(filename.as_str()).await {
+                    //                     user_picture_filename.set(filename.clone());
+                    //                     let url = make_blob_url(&bytes);
+                    //                     info!("{:?}", bytes);
+                    //                     info!("{}", url.to_string());
+                    //                     user_picture_blob.set(url);
+                    //                     user_picture.set(bytes);
+                    //                 }
+                    //             }
+                    //         }
+                    //     }
+                    // }),
                 }
             }
             div { class: "w-100" }
@@ -165,7 +202,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 img {
                     class: "img-fluid rounded",
                     src: "{user_picture_blob.current().to_string()}",
-                    alt: "asd"
+                    alt: "User Picture"
                 }
             }
             div { class: "w-100" }
@@ -197,17 +234,21 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                                 Err(e) => display_message.send(e)
                             }
 
-                            let res = client.post(api::USER_PICTURE.as_str())
-                                .body((*user_picture.current()).clone())
-                                .bearer_auth(auth_token.unwrap_or("".into()))
-                                .send().await
-                                .handle_result(UIMessage::error("Submitting user picture failed.".to_string())).await;
+                            let bytes = (*user_picture.current()).clone();
 
-                            match res {
-                                Ok(()) => {
-                                    display_message.send(UIMessage::info(format!("Updated user picture.")));
+                            if !bytes.is_empty() {
+                                let res = client.post(api::USER_PICTURE.as_str())
+                                    .body(bytes)
+                                    .bearer_auth(auth_token.unwrap_or("".into()))
+                                    .send().await
+                                    .handle_result(UIMessage::error("Submitting user picture failed.".to_string())).await;
+
+                                match res {
+                                    Ok(()) => {
+                                        display_message.send(UIMessage::info(format!("Updated user picture.")));
+                                    }
+                                    Err(e) => display_message.send(e)
                                 }
-                                Err(e) => display_message.send(e)
                             }
                         }
                     }),
