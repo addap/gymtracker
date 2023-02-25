@@ -4,6 +4,7 @@ use dioxus::prelude::*;
 use fermi::{use_atom_state, use_read};
 use gloo_timers::future::TimeoutFuture;
 use image::{imageops, io::Reader as ImageReader, ImageResult};
+use log::info;
 use std::io::Cursor;
 
 use crate::{
@@ -12,6 +13,7 @@ use crate::{
     components::nav::USER_PICTURE,
     messages::{MessageProps, UIMessage},
     request_ext::RequestExt,
+    to_dataurl,
 };
 use gt_core::models;
 
@@ -23,7 +25,10 @@ fn downscale_image_opt(bytes: &[u8]) -> ImageResult<Vec<u8>> {
     let downscaled = imageops::resize(&img, 200, 200, imageops::FilterType::Triangle);
 
     let mut bytes: Vec<u8> = Vec::new();
-    downscaled.write_to(&mut Cursor::new(&mut bytes), image::ImageOutputFormat::Png)?;
+    downscaled.write_to(
+        &mut Cursor::new(&mut bytes),
+        image::ImageOutputFormat::Jpeg(90),
+    )?;
     Ok(bytes)
 }
 
@@ -34,7 +39,6 @@ fn downscale_image(bytes: Vec<u8>) -> Vec<u8> {
 pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
     let display_name = use_state(&cx, || "".to_string());
-    // let user_picture_blob = use_state(&cx, || "".to_string());
     let user_picture = use_atom_state(&cx, USER_PICTURE);
     let user_picture_bytes = use_state(&cx, || Vec::new());
     let body_height = use_state(&cx, || 0.0);
@@ -135,14 +139,14 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                                     break;
                                 }
                             }
+                            info!("Reading base64 user image from Javascript");
                             let img_b64 = crate::getFileString();
                             let img_bytes = general_purpose::STANDARD.decode(img_b64).unwrap();
 
                             let downscaled_bytes = downscale_image(img_bytes);
-                            let downscaled_b64 = general_purpose::STANDARD.encode(&downscaled_bytes);
-                            let blob_url = format!("data:image/jpg;base64,{}", downscaled_b64);
+                            let data_url = to_dataurl(&downscaled_bytes);
 
-                            user_picture.set(blob_url);
+                            user_picture.set(data_url);
                             user_picture_bytes.set(downscaled_bytes);
                         }
                     })

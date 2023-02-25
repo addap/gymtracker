@@ -85,8 +85,6 @@ pub fn MainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             }
             if is_logged_in(&cx) {
                 rsx!{ LoggedInMainPage { display_message: &cx.props.display_message } }
-            } else {
-                rsx!{ LoggedOutMainPage {} }
             }
         }
     })

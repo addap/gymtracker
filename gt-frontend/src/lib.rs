@@ -6,6 +6,7 @@ mod components;
 mod messages;
 mod request_ext;
 
+use base64::{engine::general_purpose, Engine as _};
 use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
 use dioxus_router::{Route, Router};
@@ -26,6 +27,7 @@ extern "C" {
     static JS_BANNER: String;
     static JS_MESSAGE_TIMEOUT: i32;
     static JS_PAGE_SIZE: i32;
+    static JS_LOGO: String;
 }
 
 #[wasm_bindgen]
@@ -39,6 +41,13 @@ lazy_static! {
     static ref BANNER: String = JS_BANNER.clone();
     static ref MESSAGE_TIMEOUT: i64 = JS_MESSAGE_TIMEOUT.clone() as i64;
     static ref PAGE_SIZE: u64 = JS_PAGE_SIZE.clone() as u64;
+    static ref LOGO: String = JS_LOGO.clone();
+}
+
+fn to_dataurl(bytes: &[u8]) -> String {
+    let b64 = general_purpose::STANDARD.encode(&bytes);
+    let data_url = format!("data:image/jpg;base64,{}", b64);
+    data_url
 }
 
 pub fn app(cx: Scope) -> Element {

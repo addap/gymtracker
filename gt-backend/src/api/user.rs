@@ -8,7 +8,6 @@ use axum::{
 use chrono::Utc;
 use gt_core::models::UserAuth;
 use http::{HeaderMap, StatusCode};
-use lazy_static::lazy_static;
 use pbkdf2::{
     password_hash::{PasswordHash, PasswordVerifier},
     Pbkdf2,
@@ -19,10 +18,6 @@ use crate::{db, AppError, AppState, Result};
 use gt_core::auth::create_token;
 use gt_core::entities::{prelude::*, *};
 use gt_core::{models, models::AuthToken};
-
-lazy_static! {
-    static ref DEFAULT_PIC: Vec<u8> = include_bytes!("../../static/default_picture.jpg").to_vec();
-}
 
 /// Sign up new user and return an auth token on success.
 pub async fn register(
@@ -168,14 +163,15 @@ pub async fn get_user_picture(
         // // convert the `Stream` into an `axum::body::HttpBody`
         // let body = StreamBody::new(stream);
 
-        let mut headers = HeaderMap::new();
-        headers.insert(
-            header::CONTENT_TYPE,
-            "application/octet-stream".parse().unwrap(),
-        );
+        // let mut headers = HeaderMap::new();
+        // headers.insert(
+        //     header::CONTENT_TYPE,
+        //     "application/octet-stream".parse().unwrap(),
+        // );
 
-        // TODO can we avoid cloning here?
-        Ok((headers, DEFAULT_PIC.clone()))
+        // // TODO can we avoid cloning here?
+        // Ok((headers, DEFAULT_PIC.clone()))
+        Err(AppError::ResourceNotFound)
     }
 }
 

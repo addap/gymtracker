@@ -1346,7 +1346,6 @@ dependencies = [
  "http",
  "hyper",
  "itertools",
- "lazy_static",
  "log",
  "migration",
  "ordered-float 3.4.0",

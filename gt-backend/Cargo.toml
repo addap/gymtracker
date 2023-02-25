@@ -17,7 +17,6 @@ gt-core = { path = "../gt-core" }
 http = "0.2.8"
 hyper = { version = "0.14.23", features = ["full"] }
 itertools = "0.10.5"
-lazy_static = "1.4.0"
 log = "0.4.17"
 migration = { path = "../migration" }
 ordered-float = "3.4.0"
