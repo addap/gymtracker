@@ -2,7 +2,6 @@
 use dioxus::prelude::*;
 use fermi::use_read;
 use itertools::join;
-use log::info;
 
 use crate::messages::{MessageProps, UIMessage};
 use crate::request_ext::RequestExt;

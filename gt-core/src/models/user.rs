@@ -19,7 +19,7 @@ pub struct UserSignup {
     pub email: String,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Deref, From)]
+#[derive(Debug, Clone, Deserialize, Serialize, Deref, From, PartialEq, Eq)]
 pub struct AuthToken(pub String);
 
 impl Display for AuthToken {

@@ -2,7 +2,6 @@
 use dioxus::prelude::*;
 use fermi::use_read;
 use futures_util::StreamExt;
-use log::info;
 
 use crate::components as c;
 use crate::messages::{MessageProps, UIMessage};

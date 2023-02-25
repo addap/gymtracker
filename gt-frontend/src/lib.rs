@@ -7,14 +7,12 @@ mod messages;
 mod request_ext;
 
 use chrono::{DateTime, Utc};
-use const_format::concatcp;
 use dioxus::prelude::*;
 use dioxus_router::{Route, Router};
 use fermi::use_init_atom_root;
 use futures_util::StreamExt;
 use gloo_timers::future::TimeoutFuture;
 use lazy_static::lazy_static;
-use log::info;
 use std::collections::VecDeque;
 use wasm_bindgen::prelude::*;
 

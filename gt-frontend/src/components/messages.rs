@@ -14,14 +14,14 @@ pub fn Messages<'a>(cx: Scope, ui_messages: &'a UseRef<VecDeque<UIMessage>>) -> 
                     rsx! {
                         div {
                             class: "alert alert-success",
-                            div { ui_message.message.clone() }
+                            div { ui_message.to_string() }
                         }
                     },
                 UIMessageType::Error =>
                     rsx! {
                         div {
                             class: "alert alert-danger",
-                            div { format!("Error: {}", ui_message.message) }
+                            div { ui_message.to_string() }
                         }
                     },
             }

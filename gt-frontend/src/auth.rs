@@ -1,5 +1,6 @@
 use dioxus::prelude::*;
 use fermi::{use_read, use_set, Atom};
+use log::error;
 use web_sys::window;
 
 use crate::{api, messages::UIMessage, request_ext::RequestExt};
@@ -25,8 +26,7 @@ pub fn is_logged_in<'a, T>(cx: &Scope<'a, T>) -> bool {
     opt_auth_token.is_some()
 }
 
-pub fn init_auth_token(cx: &Scope) {
-    let setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
+fn get_stored_auth_token() -> Option<AuthToken> {
     let stored_token = window()
         .unwrap()
         .local_storage()
@@ -35,6 +35,12 @@ pub fn init_auth_token(cx: &Scope) {
         .get_item("auth_token")
         .unwrap()
         .map(AuthToken);
+    stored_token
+}
+
+pub fn init_auth_token(cx: &Scope) {
+    let setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
+    let stored_token = get_stored_auth_token();
 
     // Check if auth token is still valid.
     if let Some(ref token) = stored_token {
@@ -45,16 +51,18 @@ pub fn init_auth_token(cx: &Scope) {
             to_owned![setter];
 
             async move {
-                if let Ok(()) = request
+                match request
                     .send()
                     .await
                     .handle_result(UIMessage::error("Reauthentication failed.".to_string()))
                     .await
                 {
-                    setter(stored_token);
-                } else {
-                    store_auth_token(None);
-                }
+                    Ok(()) => setter(stored_token),
+                    Err(e) => {
+                        store_auth_token(None);
+                        error!("{}", e);
+                    }
+                };
             }
         })
     }

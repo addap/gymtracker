@@ -2,7 +2,6 @@
 use dioxus::prelude::*;
 use fermi::use_read;
 use futures_util::StreamExt;
-use log::info;
 
 use crate::components as c;
 use crate::request_ext::RequestExt;
@@ -67,7 +66,8 @@ fn LoggedInMainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         }
     })
 }
-fn LoggedOutMainPage(cx: Scope) -> Element {
+
+fn LoggedOutMainPage(_cx: Scope) -> Element {
     None
 }
 
@@ -85,6 +85,8 @@ pub fn MainPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             }
             if is_logged_in(&cx) {
                 rsx!{ LoggedInMainPage { display_message: &cx.props.display_message } }
+            } else {
+                rsx!{ LoggedOutMainPage {} }
             }
         }
     })

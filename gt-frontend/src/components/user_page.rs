@@ -1,40 +1,42 @@
 #![allow(non_snake_case)]
-use dioxus::prelude::*;
-use fermi::use_read;
-use gloo_file::{Blob, ObjectUrl};
-use gloo_timers::future::TimeoutFuture;
-// use js_sys::{JsString, Reflect};
-use log::info;
-// use wasm_bindgen::JsCast;
 use base64::{engine::general_purpose, Engine as _};
+use dioxus::prelude::*;
+use fermi::{use_atom_state, use_read};
+use gloo_timers::future::TimeoutFuture;
+use image::{imageops, io::Reader as ImageReader, ImageResult};
+use std::io::Cursor;
 
 use crate::{
     api,
     auth::ACTIVE_AUTH_TOKEN,
+    components::nav::USER_PICTURE,
     messages::{MessageProps, UIMessage},
     request_ext::RequestExt,
 };
 use gt_core::models;
 
-const js_grab_file: &str = r#"function(evt) {
-    let file = evt.target.files[0];
-    let reader = new FileReader();
-    reader.addEventListener('load', function() {
-        fileString = reader.result.match(/data:.*?\/.*?;base64,(.*)/)[1];
-    });
-    reader.readAsDataURL(file);
-};"#;
+fn downscale_image_opt(bytes: &[u8]) -> ImageResult<Vec<u8>> {
+    let img = ImageReader::new(Cursor::new(bytes))
+        .with_guessed_format()?
+        .decode()?;
 
-fn make_blob_url(bytes: &[u8]) -> ObjectUrl {
-    ObjectUrl::from(Blob::new(bytes))
+    let downscaled = imageops::resize(&img, 200, 200, imageops::FilterType::Triangle);
+
+    let mut bytes: Vec<u8> = Vec::new();
+    downscaled.write_to(&mut Cursor::new(&mut bytes), image::ImageOutputFormat::Png)?;
+    Ok(bytes)
+}
+
+fn downscale_image(bytes: Vec<u8>) -> Vec<u8> {
+    downscale_image_opt(&bytes).unwrap_or(bytes)
 }
 
 pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
     let display_name = use_state(&cx, || "".to_string());
-    let user_picture_objecturl = use_state(&cx, || ObjectUrl::from(Blob::new("")));
-    let user_picture_blob = use_state(&cx, || "".to_string());
-    let user_picture = use_state(&cx, || Vec::new());
+    // let user_picture_blob = use_state(&cx, || "".to_string());
+    let user_picture = use_atom_state(&cx, USER_PICTURE);
+    let user_picture_bytes = use_state(&cx, || Vec::new());
     let body_height = use_state(&cx, || 0.0);
     let body_weight = use_state(&cx, || 0.0);
     let muscle_mass = use_state(&cx, || 0.0);
@@ -83,36 +85,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         }
     });
 
-    let fetch_image = use_future(&cx, (), |()| {
-        to_owned![auth_token, user_picture_blob, user_picture_objecturl];
-        //
-        async move {
-            let client = reqwest::Client::new();
-            let res = client
-                .get(api::USER_PICTURE.as_str())
-                .bearer_auth(auth_token.unwrap_or("".into()))
-                .send()
-                .await;
-
-            match res {
-                Ok(res) => match res.bytes().await {
-                    Ok(bytes) => {
-                        let url = make_blob_url(bytes.as_ref());
-                        user_picture_blob.set(url.to_string());
-                        user_picture_objecturl.set(url);
-                    }
-                    Err(e) => {
-                        info!("{}", e);
-                    }
-                },
-                Err(e) => {
-                    info!("{}", e);
-                }
-            }
-        }
-    });
-
-    let read_js_var = use_future(&cx, (), |()| async move {
+    use_future(&cx, (), |()| async move {
         crate::attachToFile();
     });
 
@@ -152,8 +125,8 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     r#type: "file",
                     id: "user-picture",
                     value: "test",
-                    onchange: move |evt| cx.spawn({
-                        to_owned![user_picture, user_picture_blob];
+                    onchange: move |_| cx.spawn({
+                        to_owned![user_picture, user_picture_bytes];
 
                         async move {
                             loop {
@@ -162,38 +135,17 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                                     break;
                                 }
                             }
-                            let blob_data = crate::getFileString();
-                            let blob_url = format!("data:image/jpg;base64,{}", blob_data);
+                            let img_b64 = crate::getFileString();
+                            let img_bytes = general_purpose::STANDARD.decode(img_b64).unwrap();
 
-                            user_picture_blob.set(blob_url);
-                            let bytes = general_purpose::STANDARD.decode(blob_data).unwrap();
-                            user_picture.set(bytes);
+                            let downscaled_bytes = downscale_image(img_bytes);
+                            let downscaled_b64 = general_purpose::STANDARD.encode(&downscaled_bytes);
+                            let blob_url = format!("data:image/jpg;base64,{}", downscaled_b64);
+
+                            user_picture.set(blob_url);
+                            user_picture_bytes.set(downscaled_bytes);
                         }
                     })
-                    // value: "{user_picture_filename}",
-                    // placeholder: "picture",
-                    // "onchange": js_grab_file,
-                    // onchange: move |evt| cx.spawn({
-                    //     to_owned![user_picture, user_picture_filename, user_picture_blob];
-                    //     // info!("{:?}", evt.files);
-                    //     async move {
-                    //         info!("1");
-                    //         if let Some(formfiles) = evt.files.as_ref() {
-                    //         info!("2");
-                    //             if let Some(filename) = formfiles.files().get(0) {
-                    //         info!("3");
-                    //                 if let Some(bytes) = formfiles.read_file(filename.as_str()).await {
-                    //                     user_picture_filename.set(filename.clone());
-                    //                     let url = make_blob_url(&bytes);
-                    //                     info!("{:?}", bytes);
-                    //                     info!("{}", url.to_string());
-                    //                     user_picture_blob.set(url);
-                    //                     user_picture.set(bytes);
-                    //                 }
-                    //             }
-                    //         }
-                    //     }
-                    // }),
                 }
             }
             div { class: "w-100" }
@@ -201,7 +153,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 class: "col-6 col-sm-2",
                 img {
                     class: "img-fluid rounded",
-                    src: "{user_picture_blob.current().to_string()}",
+                    src: "{user_picture.current()}",
                     alt: "User Picture"
                 }
             }
@@ -211,7 +163,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                     r#type: "button",
                     class: "col-3 col-sm-1 btn btn-sm btn-outline-success",
                     onclick: move |_| cx.spawn({
-                        to_owned![auth_token, display_name, user_picture];
+                        to_owned![auth_token, display_name, user_picture_bytes];
                         let display_message = cx.props.display_message.clone();
 
                         async move {
@@ -234,7 +186,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                                 Err(e) => display_message.send(e)
                             }
 
-                            let bytes = (*user_picture.current()).clone();
+                            let bytes = (*user_picture_bytes.current()).clone();
 
                             if !bytes.is_empty() {
                                 let res = client.post(api::USER_PICTURE.as_str())

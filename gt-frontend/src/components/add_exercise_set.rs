@@ -3,7 +3,6 @@ use chrono::{Local, NaiveDateTime, TimeZone};
 use dioxus::prelude::*;
 use derive_more::Deref;
 use fermi::{use_read, use_atom_state, Atom};
-use log::info;
 
 use crate::{
     api,

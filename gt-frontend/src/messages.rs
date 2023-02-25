@@ -1,3 +1,5 @@
+use std::fmt;
+
 use chrono::Duration;
 use dioxus::prelude::*;
 
@@ -50,5 +52,14 @@ impl UIMessage {
 
     pub fn server_error() -> Self {
         UIMessage::error("Connection to server failed".to_string())
+    }
+}
+
+impl fmt::Display for UIMessage {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.r#type {
+            UIMessageType::Error => f.write_fmt(format_args!("Error: {}", self.message)),
+            UIMessageType::Info => f.write_str(&self.message),
+        }
     }
 }

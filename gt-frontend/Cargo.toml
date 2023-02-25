@@ -18,6 +18,7 @@ futures-util = "0.3.26"
 gloo-file = "0.2.3"
 gloo-timers = "0.2.6"
 gt-core = { path = "../gt-core" }
+image = "0.24.5"
 itertools = "0.10.5"
 js-sys = "0.3.60"
 lazy_static = "1.4.0"

@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
 use chrono::{DateTime, Local, TimeZone};
 use dioxus::prelude::*;
-use log::info;
 use fermi::use_read;
 
 use crate::{

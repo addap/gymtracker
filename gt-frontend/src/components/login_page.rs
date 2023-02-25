@@ -2,7 +2,6 @@
 use dioxus::prelude::*;
 use dioxus_router::use_router;
 use fermi::use_set;
-use log::info;
 
 use crate::{
     api,

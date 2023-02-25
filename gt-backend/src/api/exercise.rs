@@ -202,7 +202,7 @@ pub async fn delete_exercise_set_for_user(
     Extension(user): Extension<user_login::Model>,
     Json(payload): Json<models::ExerciseSetDelete>,
 ) -> Result<Json<()>> {
-    let res = ExerciseSet::delete_by_id(payload.id)
+    let _res = ExerciseSet::delete_by_id(payload.id)
         .filter(exercise_set::Column::UserId.eq(user.id))
         .exec(&state.conn)
         .await?;
