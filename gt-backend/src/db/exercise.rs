@@ -46,3 +46,49 @@ pub async fn get_exercise_sets(
 
     Ok(res)
 }
+
+// pub async fn get_weighted_exercise_sets_for_user(
+//     state: &AppState,
+//     user_id: i32,
+// ) -> Result<Vec<models::ExerciseSetWeightedQuery>> {
+//     let q = ExerciseSet::find()
+//         .filter(exercise_set::Column::UserId.eq(user_id))
+//         .filter(exercise_name::Column::Kind.eq(models::ExerciseKind::Weighted))
+//         .column_as(exercise_name::Column::Name, "name")
+//         .order_by(exercise_set::Column::CreatedAt, Order::Desc)
+//         .join(
+//             JoinType::InnerJoin,
+//             exercise_set::Relation::ExerciseName.def(),
+//         );
+
+//     log::info!("{}", q.build(DbBackend::Sqlite).to_string());
+
+//     let res = q
+//         .into_model::<models::ExerciseSetWeightedQuery>()
+//         .all(&state.conn)
+//         .await?;
+
+//     Ok(res)
+// }
+
+// pub async fn get_bodyweight_exercise_sets_for_user(
+//     state: &AppState,
+//     user_id: i32,
+// ) -> Result<Vec<models::ExerciseSetBodyweightQuery>> {
+//     let q = ExerciseSet::find()
+//         .filter(exercise_set::Column::UserId.eq(user_id))
+//         .filter(exercise_name::Column::Kind.eq(models::ExerciseKind::Bodyweight))
+//         .column_as(exercise_name::Column::Name, "name")
+//         .order_by(exercise_set::Column::CreatedAt, Order::Desc)
+//         .join(
+//             JoinType::InnerJoin,
+//             exercise_set::Relation::ExerciseName.def(),
+//         );
+
+//     let res = q
+//         .into_model::<models::ExerciseSetBodyweightQuery>()
+//         .all(&state.conn)
+//         .await?;
+
+//     Ok(res)
+// }

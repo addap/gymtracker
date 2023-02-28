@@ -13,6 +13,7 @@ use crate::{
 };
 use crate::{components as c, to_dataurl};
 
+// TODO reset on logout/login
 pub static USER_PICTURE: Atom<String> = |_| (*LOGO).clone();
 
 pub fn Navbar(cx: Scope) -> Element {

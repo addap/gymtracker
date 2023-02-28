@@ -10,6 +10,7 @@ use gt_core::models;
 
 pub fn PRPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
+    let search_term = use_state(&cx, || "".to_string());
 
     let fetch = use_future(&cx, (), |()| {
         to_owned![auth_token];
@@ -39,19 +40,66 @@ pub fn PRPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
     let content = match fetch.value() {
         Some(Some(prs)) => {
-            let prlist_weighted = prs.weighted.iter().map(|pr| {
+            let prlist_weighted = prs.weighted.iter().filter(|pr| {
+                let name = pr.name.to_lowercase();
+                let search = (*search_term.current()).clone();
+                name.contains(&search)
+            }).map(|pr| {
                 rsx! {
                     li { format!("{}: [ {} ]", pr.name.clone(), join(pr.pr.iter()
-                            .map(|(weight, reps)| format!("{:.1} x {}", weight, reps)), " | ")) }
+                            .map(|(weight, reps)| format!("{} × {:.1}kg", weight, reps)), " | ")) }
                 }
             });
+            let prlist_bodyweight = prs
+                .bodyweight
+                .iter()
+                .filter(|pr| {
+                    let name = pr.name.to_lowercase();
+                    let search = (*search_term.current()).clone();
+                    name.contains(&search)
+                })
+                .map(|pr| {
+                    rsx! {
+                        li { format!("{}: [ {} ]", pr.name.clone(), join(pr.pr.iter()
+                                .map(|reps| format!("{} ×", reps)), " | ")) }
+                    }
+                });
             rsx! {
-                button {
-                    onclick: move |_| fetch.restart(),
-                    "Refresh"
+                div {
+                    class: "my-3 p-2",
+                    form {
+                        class: "row g-1 g-sm-2",
+                        div {
+                            class: "form-group col-12 col-sm-auto",
+                            input {
+                                id: "pr-search-box",
+                                class: "form-control",
+                                value: "{ search_term }",
+                                placeholder: "Search",
+                                oninput: move |evt| { search_term.set(evt.value.to_lowercase()) }
+                            }
+                        }
+                        div {
+                            class: "form-group col-12 col-sm-auto",
+                            button {
+                                class: "btn btn-outline-secondary",
+                                r#type: "button",
+                                onclick: move |_| fetch.restart(),
+                                "Refresh"
+                            }
+                        }
+                    }
+                    div {
+                        class: "bg-body-tertiary",
+                        p { "By Weight" }
+                        ul { prlist_weighted }
+                    }
+                    div {
+                        class: "bg-body-tertiary",
+                        p { "By Bodyweight" }
+                        ul { prlist_bodyweight }
+                    }
                 }
-                p { "By Weight" }
-                ul { prlist_weighted }
             }
         }
         _ => {

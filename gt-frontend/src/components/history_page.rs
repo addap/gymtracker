@@ -7,10 +7,12 @@ use crate::components as c;
 use crate::messages::{MessageProps, UIMessage};
 use crate::request_ext::RequestExt;
 use crate::{api, auth::ACTIVE_AUTH_TOKEN, PAGE_SIZE};
+use gt_core::models;
 
 pub fn HistoryPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
-    let history = use_state(&cx, || Vec::new());
+    let history = use_state(&cx, || Vec::<models::ExerciseSetQuery>::new());
+    let search_term = use_state(&cx, || "".to_string());
 
     let fetch = use_coroutine(&cx, |mut rx: UnboundedReceiver<Option<u64>>| {
         to_owned![auth_token, history];
@@ -48,21 +50,49 @@ pub fn HistoryPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     });
 
     let content = {
-        let hlist = history.get().iter().map(|exs| {
-            rsx! {
-                c::ExerciseSet { exs: exs, display_message: cx.props.display_message }
-            }
-        });
+        let hlist = history
+            .get()
+            .iter()
+            .filter(|&exs| {
+                let name = exs.name().to_lowercase();
+                let search = (*search_term.current()).clone();
+                name.contains(&search)
+            })
+            .map(|exs| {
+                rsx! {
+                    c::ExerciseSet { exs: exs, display_message: cx.props.display_message }
+                }
+            });
         rsx! {
-            button {
-                onclick: move |_| fetch.send(None),
-                "Show All"
-            }
-            if !history.current().is_empty() {
-                rsx!{
-                    ul {
-                        class: "list-group list-group-flush",
-                        hlist
+            div {
+                class: "my-3 p-2",
+                form {
+                    class: "row g-1 g-sm-2",
+                    div {
+                        class: "form-group col-12 col-sm-auto",
+                        input {
+                            class: "form-control",
+                            value: "{ search_term }",
+                            placeholder: "Search",
+                            oninput: move |evt| { search_term.set(evt.value.to_lowercase()) }
+                        }
+                    }
+                    div {
+                        class: "form-group col-12 col-sm-auto",
+                        button {
+                            class: "btn btn-outline-secondary",
+                            r#type: "button",
+                            onclick: move |_| fetch.send(None),
+                            "Show All"
+                        }
+                    }
+                }
+                if !history.current().is_empty() {
+                    rsx!{
+                        ul {
+                            class: "list-group list-group-flush",
+                            hlist
+                        }
                     }
                 }
             }

@@ -103,8 +103,15 @@ pub struct PRWeightedQuery {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
+pub struct PRBodyweightQuery {
+    pub name: String,
+    pub pr: Vec<i32>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
 pub struct PRQuery {
     pub weighted: Vec<PRWeightedQuery>,
+    pub bodyweight: Vec<PRBodyweightQuery>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
@@ -114,6 +121,13 @@ pub struct MergeNames {
 }
 
 impl ExerciseSetQuery {
+    pub fn name(&self) -> &str {
+        match self {
+            ExerciseSetQuery::Weighted(exs) => &exs.name,
+            ExerciseSetQuery::Bodyweight(exs) => &exs.name,
+        }
+    }
+
     pub fn id(&self) -> i32 {
         match self {
             ExerciseSetQuery::Weighted(exs) => exs.id,
