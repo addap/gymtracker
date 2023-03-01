@@ -29,6 +29,14 @@ pub struct ExerciseName {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[cfg_attr(not(target_arch = "wasm32"), derive(FromQueryResult))]
+pub struct ExerciseNameQuery {
+    pub name: String,
+    pub kind: ExerciseKind,
+    pub last_weight: Option<f64>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct ExerciseSetWeighted {
     pub name: String,
     pub reps: i32,

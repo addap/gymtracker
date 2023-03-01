@@ -26,7 +26,7 @@ static B_EXERCISE_SET_NAME: Atom<Wrapper2<String>> = |_| Wrapper2("".to_string()
 
 #[derive(Props)]
 pub struct AddExerciseProps<'a> {
-    exercise_names: Vec<models::ExerciseName>,
+    exercise_names: Vec<models::ExerciseNameQuery>,
     fetch_names: &'a Coroutine<c::main_page::FetchNames>,
     display_message: &'a Coroutine<UIMessage>,
 }
@@ -72,7 +72,21 @@ pub fn AddExerciseSetWeighted<'a>(cx: Scope<'a, AddExerciseProps<'a>>) -> Elemen
                         value: "{w_exercise_set_name.0}",
                         placeholder: "exercise name",
                         autocomplete: "off",
-                        oninput: move |evt| w_exercise_set_name.set(Wrapper1(evt.value.clone())),
+                        oninput: move |evt| {
+                            let new_name = evt.value.clone();
+                            if let Some(weight) = cx.props.exercise_names.iter()
+                                .find_map(|exn| {
+                                    if exn.name == new_name {
+                                        exn.last_weight.clone()
+                                    } else {
+                                        None
+                                    }
+                                }) {
+                                w_exercise_set_weight.set(weight)
+                            }
+                            
+                            w_exercise_set_name.set(Wrapper1(new_name))
+                        }
                     }
                     datalist {
                         id: "w-exercise-names-list",

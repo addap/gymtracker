@@ -61,7 +61,7 @@ pub fn PRPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 .map(|pr| {
                     rsx! {
                         li { format!("{}: [ {} ]", pr.name.clone(), join(pr.pr.iter()
-                                .map(|reps| format!("{} ×", reps)), " | ")) }
+                                .map(|reps| format!("{} × 身", reps)), " | ")) }
                     }
                 });
             rsx! {

@@ -6,6 +6,7 @@ fn api_url(endpoint: &str) -> String {
 }
 
 lazy_static! {
+    pub static ref EXERCISE_NAME_WEIGHT: String = api_url("/exercise/name/weight");
     pub static ref EXERCISE_NAME: String = api_url("/exercise/name");
     pub static ref EXERCISE_SET: String = api_url("/exercise/set");
     pub static ref EXERCISE_PR: String = api_url("/exercise/pr");

@@ -1,5 +1,6 @@
 use axum::extract::Path;
 use axum::{extract::State, Extension, Json};
+use migration::{Expr, Query, SimpleExpr, SubQueryStatement};
 use sea_orm::*;
 
 use crate::{db, AppError, AppState, Result};
@@ -25,10 +26,29 @@ pub async fn add_exercise_name(
 
 pub async fn get_all_exercise_names(
     State(state): State<AppState>,
-    #[allow(unused_variables)] Extension(user): Extension<user_login::Model>,
-) -> Result<Json<Vec<models::ExerciseName>>> {
+    Extension(user): Extension<user_login::Model>,
+) -> Result<Json<Vec<models::ExerciseNameQuery>>> {
     let res = ExerciseName::find()
-        .into_model::<models::ExerciseName>()
+        .column_as(
+            SimpleExpr::SubQuery(
+                None,
+                Box::new(SubQueryStatement::SelectStatement(
+                    Query::select()
+                        .column((exercise_set::Entity, exercise_set::Column::Weight))
+                        .from(exercise_set::Entity)
+                        .and_where(exercise_set::Column::UserId.eq(user.id))
+                        .and_where(
+                            Expr::col(exercise_set::Column::NameId)
+                                .equals(exercise_name::Entity, exercise_name::Column::Id),
+                        )
+                        .order_by(exercise_set::Column::CreatedAt, Order::Desc)
+                        .limit(1)
+                        .to_owned(),
+                )),
+            ),
+            "last_weight",
+        )
+        .into_model::<models::ExerciseNameQuery>()
         .all(&state.conn)
         .await?;
 
