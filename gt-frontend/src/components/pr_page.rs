@@ -47,7 +47,7 @@ pub fn PRPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             }).map(|pr| {
                 rsx! {
                     li { format!("{}: [ {} ]", pr.name.clone(), join(pr.pr.iter()
-                            .map(|(weight, reps)| format!("{} × {:.1}kg", weight, reps)), " | ")) }
+                            .map(|(weight, reps)| format!("{} × {:.1}kg", reps, weight)), " | ")) }
                 }
             });
             let prlist_bodyweight = prs
