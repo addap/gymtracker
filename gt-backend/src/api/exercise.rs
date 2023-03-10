@@ -1,6 +1,6 @@
 use axum::extract::Path;
 use axum::{extract::State, Extension, Json};
-use migration::{Expr, Query, SimpleExpr, SubQueryStatement};
+use migration::{Alias, Expr, NullOrdering, Query, SimpleExpr, SubQueryStatement};
 use sea_orm::*;
 
 use crate::{db, AppError, AppState, Result};
@@ -28,8 +28,11 @@ pub async fn get_all_exercise_names(
     State(state): State<AppState>,
     Extension(user): Extension<user_login::Model>,
 ) -> Result<Json<Vec<models::ExerciseNameQuery>>> {
-    let res = ExerciseName::find()
-        .column_as(
+    let q = Query::select()
+        .from(exercise_name::Entity)
+        .column((exercise_name::Entity, exercise_name::Column::Name))
+        .column((exercise_name::Entity, exercise_name::Column::Kind))
+        .expr_as(
             SimpleExpr::SubQuery(
                 None,
                 Box::new(SubQueryStatement::SelectStatement(
@@ -46,11 +49,40 @@ pub async fn get_all_exercise_names(
                         .to_owned(),
                 )),
             ),
-            "last_weight",
+            Alias::new("last_weight"),
         )
-        .into_model::<models::ExerciseNameQuery>()
-        .all(&state.conn)
-        .await?;
+        .expr_as(
+            SimpleExpr::SubQuery(
+                None,
+                Box::new(SubQueryStatement::SelectStatement(
+                    Query::select()
+                        .column((exercise_set::Entity, exercise_set::Column::CreatedAt))
+                        .from(exercise_set::Entity)
+                        .and_where(exercise_set::Column::UserId.eq(user.id))
+                        .and_where(
+                            Expr::col(exercise_set::Column::NameId)
+                                .equals(exercise_name::Entity, exercise_name::Column::Id),
+                        )
+                        .order_by(exercise_set::Column::CreatedAt, Order::Desc)
+                        .limit(1)
+                        .to_owned(),
+                )),
+            ),
+            Alias::new("created_at"),
+        )
+        .order_by_with_nulls(
+            exercise_set::Column::CreatedAt,
+            Order::Desc,
+            NullOrdering::Last,
+        )
+        .to_owned();
+
+    let res = models::ExerciseNameQuery::find_by_statement(StatementBuilder::build(
+        &q,
+        &DbBackend::Postgres,
+    ))
+    .all(&state.conn)
+    .await?;
 
     Ok(Json(res))
 }
