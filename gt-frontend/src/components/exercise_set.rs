@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use chrono::{DateTime, Local, TimeZone};
+use chrono::{Local, TimeZone};
 use dioxus::prelude::*;
 use fermi::use_read;
 
@@ -7,17 +7,10 @@ use crate::{
     auth::ACTIVE_AUTH_TOKEN,
     request_ext::RequestExt,
     api,
-    messages::UIMessage
+    messages::UIMessage,
+    util::*,
 };
 use gt_core::models;
-
-fn format_date(t: DateTime<Local>) -> String {
-    if t.date_naive() == Local::now().date_naive() {
-        format!("At {}", t.time().format("%H:%M:%S").to_string())
-    } else {
-        format!("On {}", t.date_naive().to_string())
-    }
-}
 
 #[inline_props]
 pub fn ExerciseSetWeighted<'a>(
@@ -28,16 +21,25 @@ pub fn ExerciseSetWeighted<'a>(
 
     cx.render(rsx! {
         div {
-            exs.name.clone()
-            br {}
+            class: "row",
             div {
-                format!("Weight: {}kg", exs.weight.to_string())
+                class: "col",
+                p { class: "fw-bold",
+                    exs.name.clone() }
             }
             div {
-                format!("Reps: {}", exs.reps.to_string())
+                class: "col-auto",
+                p { class: "fw-bold",
+                    format_weighted_reps(exs.reps, exs.weight) }
+            } 
+            div { class: "w-100" }
+            div {
+                class: "col"
             }
             div {
-                format_date(created_at_local)
+                class: "col-auto",
+                p { class: "fw-light",
+                    format_date(created_at_local) }
             }
         }
     })
@@ -52,13 +54,25 @@ pub fn ExerciseSetBodyweight<'a>(
 
     cx.render(rsx! {
         div {
-            exs.name.clone()
-            br {}
+            class: "row",
             div {
-                format!("Reps: {}", exs.reps.to_string())
+                class: "col",
+                p { class: "fw-bold",
+                    exs.name.clone() }
             }
             div {
-                format_date(created_at_local)
+                class: "col-auto",
+                p { class: "fw-bold",
+                    format_bodyweight_reps(exs.reps) }
+            }
+            div { class: "w-100" }
+            div {
+                class: "col"
+            }
+            div {
+                class: "col-auto",
+                p { class: "fw-light",
+                    format_date(created_at_local) }
             }
         }
     })
@@ -95,6 +109,7 @@ pub fn ExerciseSet<'a>(cx: Scope<'a, ExerciseSetProps<'a>>) -> Element<'a> {
                 div {
                     class: "col-auto d-flex align-items-center",
                     button {
+                        class: "btn btn-sm btn-outline-danger",
                         onclick: move |_| cx.spawn({
                             to_owned![auth_token, deleted];
                             let display_message = cx.props.display_message.clone();

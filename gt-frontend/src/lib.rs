@@ -5,6 +5,7 @@ mod auth;
 mod components;
 mod messages;
 mod request_ext;
+mod util;
 
 use base64::{engine::general_purpose, Engine as _};
 use chrono::{DateTime, Utc};

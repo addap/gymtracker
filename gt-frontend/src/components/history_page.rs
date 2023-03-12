@@ -3,10 +3,14 @@ use dioxus::prelude::*;
 use fermi::use_read;
 use futures_util::StreamExt;
 
-use crate::components as c;
-use crate::messages::{MessageProps, UIMessage};
-use crate::request_ext::RequestExt;
-use crate::{api, auth::ACTIVE_AUTH_TOKEN, PAGE_SIZE};
+use crate::{
+    api,
+    auth::ACTIVE_AUTH_TOKEN,
+    components as c,
+    messages::{MessageProps, UIMessage},
+    request_ext::RequestExt,
+    PAGE_SIZE,
+};
 use gt_core::models;
 
 pub fn HistoryPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
@@ -50,33 +54,25 @@ pub fn HistoryPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     });
 
     let content = {
-        let hlist = history
+        let filtered_history = history
+            // filter by search box
             .get()
             .iter()
             .filter(|&exs| {
                 let name = exs.name().to_lowercase();
                 let search = (*search_term.current()).clone();
                 name.contains(&search)
-            })
-            .map(|exs| {
-                rsx! {
-                    c::ExerciseSet { exs: exs, display_message: cx.props.display_message }
-                }
             });
+        let hlist = filtered_history.map(|exs| {
+            rsx! {
+                c::ExerciseSet { exs: exs, display_message: cx.props.display_message }
+            }
+        });
         rsx! {
             div {
                 class: "my-3 p-2",
                 form {
                     class: "row g-1 g-sm-2",
-                    div {
-                        class: "form-group col-12 col-sm-auto",
-                        input {
-                            class: "form-control",
-                            value: "{ search_term }",
-                            placeholder: "Search",
-                            oninput: move |evt| { search_term.set(evt.value.to_lowercase()) }
-                        }
-                    }
                     div {
                         class: "form-group col-12 col-sm-auto",
                         button {
@@ -86,11 +82,20 @@ pub fn HistoryPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                             "Show All"
                         }
                     }
+                    div {
+                        class: "form-group col-12 col-sm",
+                        input {
+                            class: "form-control",
+                            value: "{ search_term }",
+                            placeholder: "Search",
+                            oninput: move |evt| { search_term.set(evt.value.to_lowercase()) }
+                        }
+                    }
                 }
                 if !history.current().is_empty() {
                     rsx!{
                         ul {
-                            class: "list-group list-group-flush",
+                            class: "list-group list-group-flush my-3",
                             hlist
                         }
                     }
