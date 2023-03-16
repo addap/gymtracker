@@ -107,6 +107,7 @@ pub fn app(cx: Scope) -> Element {
                 Route { to: "/admin", c::Superuser { c::AdminPage { display_message: display_message } }}
                 Route { to: "/user", c::LoggedIn { c::UserPage { display_message: display_message } }}
                 Route { to: "/history", c::LoggedIn { c::HistoryPage { display_message: display_message } }}
+                Route { to: "/graph", c::GraphPage { } }
                 Route { to: "/pr", c::LoggedIn { c::PRPage { display_message: display_message } }}
                 Route { to: "/stats", c::LoggedIn { c::StatsPage {} }}
                 Route { to: "", c::MainPage { display_message: display_message } }

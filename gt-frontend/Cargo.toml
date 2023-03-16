@@ -31,3 +31,10 @@ wasm-bindgen = "0.2.83"
 wasm-cookies = "0.2.0"
 wasm-logger = "0.2.0"
 web-sys = { version = "0.3.60", features = [ "Storage" ] }
+
+[dependencies.plotters]
+git = "https://github.com/plotters-rs/plotters.git"
+
+[dependencies.plotters-canvas]
+git = "https://github.com/AE1020/plotters-canvas.git"
+branch = "revert-rotateangle"
