@@ -9,6 +9,7 @@ lazy_static! {
     pub static ref EXERCISE_NAME_WEIGHT: String = api_url("/exercise/name/weight");
     pub static ref EXERCISE_NAME: String = api_url("/exercise/name");
     pub static ref EXERCISE_SET: String = api_url("/exercise/set");
+    pub static ref EXERCISE_GRAPH: String = api_url("/exercise/graph");
     pub static ref EXERCISE_PR: String = api_url("/exercise/pr");
     pub static ref USER_LOGIN: String = api_url("/user/login");
     pub static ref USER_REGISTER: String = api_url("/user/register");

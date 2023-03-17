@@ -105,6 +105,18 @@ pub enum ExerciseSetQuery {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
+pub struct ExerciseGraphQueryPerDate {
+    pub date: chrono::NaiveDate,
+    pub weights: Vec<(f64, i32)>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
+pub struct ExerciseGraphQuery {
+    pub name: String,
+    pub per_date: Vec<ExerciseGraphQueryPerDate>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
 pub struct PRWeightedQuery {
     pub name: String,
     pub pr: Vec<(f64, i32)>,
