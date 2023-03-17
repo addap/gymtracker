@@ -1,8 +1,9 @@
 #![allow(non_snake_case)]
 use const_format::concatcp;
+use derive_more::Deref;
 use dioxus::prelude::*;
 use dioxus_router::Link;
-use fermi::{use_atom_state, Atom};
+use fermi::{use_atom_state, use_set, Atom};
 use log::info;
 use reqwest::StatusCode;
 
@@ -13,13 +14,21 @@ use crate::{
 };
 use crate::{components as c, to_dataurl};
 
-// TODO reset on logout/login
-pub static USER_PICTURE: Atom<String> = |_| (*LOGO).clone();
+#[derive(Deref)]
+pub struct WrapperUserPicture<T>(pub T);
+pub static USER_PICTURE: Atom<WrapperUserPicture<String>> = |_| WrapperUserPicture((*LOGO).clone());
+
+pub fn reset_user_picture(cx: &Scope) {
+    let user_picture = use_set(cx, USER_PICTURE);
+    user_picture(WrapperUserPicture((*LOGO).clone()));
+}
 
 pub fn Navbar(cx: Scope) -> Element {
     let auth_token = use_atom_state(&cx, ACTIVE_AUTH_TOKEN);
     let user_picture = use_atom_state(&cx, USER_PICTURE);
 
+    // Asynchronously fetch user picture and set the Atom.
+    // Somehow the whole site broke when the USER_PICTURE atom was in the main_page module, so for now we keep it in the navbar module.
     let _fetch_image = use_future(&cx, auth_token, |auth_token_opt| {
         to_owned![user_picture, user_picture];
         async move {
@@ -38,7 +47,7 @@ pub fn Navbar(cx: Scope) -> Element {
                                 Ok(bytes) => {
                                     info!("Fetched user image.");
                                     let data_url = to_dataurl(bytes.as_ref());
-                                    user_picture.set(data_url);
+                                    user_picture.set(WrapperUserPicture(data_url));
                                 }
                                 Err(e) => {
                                     info!("{}", e);
@@ -66,16 +75,9 @@ pub fn Navbar(cx: Scope) -> Element {
                     div {
                         class: "navbar-brand",
                         img {
-                            src: "{user_picture.current()}",
+                            src: "{user_picture.current().0}",
                             width: 50,
                             height: 50
-                        }
-                    }
-                    div {
-                        class: "nav-item",
-                        div {
-                            class: "nav-link",
-                            c::Logout {}
                         }
                     }
                     div {
@@ -115,6 +117,13 @@ pub fn Navbar(cx: Scope) -> Element {
                                     to: concatcp!(APP_BASE, "/admin"), "Admin"
                                 }
                             }
+                        }
+                    }
+                    div {
+                        class: "nav-item",
+                        div {
+                            class: "nav-link",
+                            c::Logout {}
                         }
                     }
                 }

@@ -4,7 +4,10 @@ use dioxus_router::use_router;
 use fermi::use_set;
 use gt_core::APP_BASE;
 
-use crate::auth::{is_logged_in, is_superuser, store_auth_token, ACTIVE_AUTH_TOKEN};
+use crate::{
+    auth::{is_logged_in, is_superuser, store_auth_token, ACTIVE_AUTH_TOKEN},
+    components::nav,
+};
 
 #[derive(Props)]
 pub struct AccessControlProps<'a> {
@@ -64,8 +67,11 @@ pub fn Logout(cx: Scope) -> Element {
                 id: "logout-btn",
                 name: "logout-btn",
                 onclick: move |_| {
+                    // Remove the auth token from both local storage & the Atom.
                     auth_setter(None);
                     store_auth_token(None);
+                    nav::reset_user_picture(&cx);
+
                     router.navigate_to(APP_BASE);
                 },
                 "Logout"

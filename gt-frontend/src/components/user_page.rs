@@ -10,7 +10,7 @@ use std::io::Cursor;
 use crate::{
     api,
     auth::ACTIVE_AUTH_TOKEN,
-    components::nav::USER_PICTURE,
+    components::nav::{WrapperUserPicture, USER_PICTURE},
     messages::{MessageProps, UIMessage},
     request_ext::RequestExt,
     to_dataurl,
@@ -146,7 +146,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                             let downscaled_bytes = downscale_image(img_bytes);
                             let data_url = to_dataurl(&downscaled_bytes);
 
-                            user_picture.set(data_url);
+                            user_picture.set(WrapperUserPicture(data_url));
                             user_picture_bytes.set(downscaled_bytes);
                         }
                     })
@@ -157,7 +157,7 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 class: "col-6 col-sm-2",
                 img {
                     class: "img-fluid rounded",
-                    src: "{user_picture.current()}",
+                    src: "{user_picture.current().0}",
                     alt: "User Picture"
                 }
             }
