@@ -15,3 +15,7 @@ pub fn format_weighted_reps(reps: i32, weight: f64) -> String {
 pub fn format_bodyweight_reps(reps: i32) -> String {
     format!("{} × 身", reps)
 }
+
+pub fn lerp(a: f64, b: f64, t: f64) -> f64 {
+    (1.0 - t) * a + t * b
+}

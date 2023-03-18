@@ -6,6 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.70"
 base64 = "0.21.0"
 chrono = "0.4.23"
 const_format = "0.2.30"
@@ -23,6 +24,7 @@ itertools = "0.10.5"
 js-sys = "0.3.60"
 lazy_static = "1.4.0"
 log = "0.4.17"
+ordered-float = "3.4.0"
 reqwest = { version = "0.11.14", features = [ "json" ] }
 serde = "1.0.152"
 serde_json = "1.0.91"

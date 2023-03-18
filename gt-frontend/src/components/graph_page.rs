@@ -1,8 +1,11 @@
 #![allow(non_snake_case)]
-use chrono::NaiveDate;
+use anyhow::{anyhow, Result};
+use chrono::{Duration, NaiveDate};
 use dioxus::prelude::*;
 use fermi::use_read;
-use log::error;
+use itertools::Itertools;
+use log::{error, info};
+use ordered_float::OrderedFloat;
 use plotters::prelude::*;
 use plotters_canvas::CanvasBackend;
 
@@ -11,12 +14,42 @@ use crate::{
     auth::ACTIVE_AUTH_TOKEN,
     messages::{MessageProps, UIMessage},
     request_ext::RequestExt,
+    util::lerp,
 };
 use gt_core::models;
 
 #[derive(Props)]
 pub struct GraphProps<'a> {
     data: &'a (String, models::ExerciseGraphQuery),
+}
+
+#[derive(Debug, Clone, Copy)]
+enum LabelPosition {
+    LowerRight,
+    Right,
+    UpperRight,
+}
+
+impl LabelPosition {
+    fn into_coord(self) -> (i32, i32) {
+        match self {
+            Self::LowerRight => (10, 10),
+            Self::Right => (10, -5),
+            Self::UpperRight => (10, -20),
+        }
+    }
+
+    fn next(self) -> Option<Self> {
+        match self {
+            Self::LowerRight => Some(Self::Right),
+            Self::Right => Some(Self::UpperRight),
+            Self::UpperRight => None,
+        }
+    }
+
+    fn new() -> Self {
+        Self::LowerRight
+    }
 }
 
 pub fn Graph<'a>(cx: Scope<'a, GraphProps<'a>>) -> Element<'a> {
@@ -46,31 +79,118 @@ pub fn Graph<'a>(cx: Scope<'a, GraphProps<'a>>) -> Element<'a> {
     })
 }
 
-pub fn draw(
-    canvas_id: &str,
-    data: &models::ExerciseGraphQuery,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
     let backend = CanvasBackend::new(canvas_id).expect("cannot find canvas");
     let root = backend.into_drawing_area();
     let font: FontDesc = ("sans-serif", 20.0).into();
 
     root.fill(&WHITE)?;
 
+    if data.per_date.len() < 1 {
+        return Err(anyhow!("No data available."));
+    }
+
+    let (from_date, to_date) = (
+        data.per_date.first().unwrap().date - Duration::days(1),
+        data.per_date.last().unwrap().date + Duration::days(1),
+    );
+
+    // TODO If I don't want to draw each individual date I have to give a slice of NaiveDate to build_cartesian_2d.
+    // However, this leads to some trait bound error in draw_series I have not been able to solve.
+    // let x_dates = data
+    //     .per_date
+    //     .iter()
+    //     .map(|exg| exg.date)
+    //     .collect::<Vec<_>>()
+    //     .as_slice();
+
+    let (from_kg, to_kg) = (
+        data.per_date
+            .iter()
+            .flat_map(|exg| exg.weights.iter().map(|(weight, _)| OrderedFloat(*weight)))
+            .min()
+            .map(|f| f - 5.0)
+            .unwrap_or(OrderedFloat(0.0))
+            .0,
+        data.per_date
+            .iter()
+            .flat_map(|exg| exg.weights.iter().map(|(weight, _)| OrderedFloat(*weight)))
+            .max()
+            .map(|f| f + 5.0)
+            .unwrap_or(OrderedFloat(100.0))
+            .0,
+    );
+
     let mut chart = ChartBuilder::on(&root)
-        .margin(20u32)
-        .caption("Bench Press Progress".to_string(), font)
+        .margin(10u32)
+        .caption(format!("{} Progress", data.name), font)
         .x_label_area_size(30u32)
-        // .y_label_area_size(30u32)
-        .build_cartesian_2d(-1f32..1f32, -1.2f32..1.2f32)?;
+        .right_y_label_area_size(30u32)
+        .build_cartesian_2d(from_date..to_date, from_kg..to_kg)?;
 
-    chart.configure_mesh().x_labels(3).y_labels(3).draw()?;
+    chart
+        .configure_mesh()
+        .y_max_light_lines(2)
+        .x_max_light_lines(0)
+        // TODO RotateAngle(45) would have been nice.
+        // Also, rotating by 90 degrees and using an offset also rotates the offset. This seems like a bug.
+        // .x_label_offset(30)
+        // .x_label_style(
+        //     ("sans-serif", 10)
+        //         .into_font()
+        //         .transform(FontTransform::Rotate90),
+        // )
+        .x_label_formatter(&|date| date.format("%d. %b").to_string())
+        .draw()?;
 
-    // chart.draw_series(LineSeries::new(
-    //     (-50..=50)
-    //         .map(|x| x as f32 / 50.0)
-    //         .map(|x| (x, x.powf(power as f32))),
-    //     &RED,
-    // ))?;
+    let points = data.per_date.iter().flat_map(|exg| {
+        exg.weights
+            .iter()
+            .map(|(weight, reps)| (exg.date, *weight, *reps))
+            .sorted_by(|a, b| a.1.total_cmp(&b.1))
+            .scan(
+                (LabelPosition::new(), None),
+                |(label_pos, opt_last), coord| {
+                    if let Some(last) = opt_last {
+                        if *last == coord.1 {
+                            if let Some(next_pos) = label_pos.next() {
+                                *label_pos = next_pos;
+                            } else {
+                                // When there is no next label position we just return None to not print a label.
+                                return Some((coord.0, coord.1, coord.2, None));
+                            }
+                        } else {
+                            *label_pos = LabelPosition::new();
+                            *opt_last = Some(coord.1);
+                        }
+                    } else {
+                        *label_pos = LabelPosition::new();
+                        *opt_last = Some(coord.1);
+                    }
+                    Some((coord.0, coord.1, coord.2, Some(*label_pos)))
+                },
+            )
+    });
+
+    chart.draw_series(PointSeries::of_element(
+        points,
+        5.0,
+        &RED,
+        &|(x, y, reps, opt_label_pos), s, st| {
+            let element = EmptyElement::at((x, y))
+                + Circle::new((0, 0), lerp(s, 3.0 * s, reps as f64 / 16.0), st.filled());
+            if let Some(label_pos) = opt_label_pos {
+                element
+                    + Text::new(
+                        format!("×{}", reps),
+                        label_pos.into_coord(),
+                        ("sans-serif", 10).into_font(),
+                    )
+            } else {
+                element + Text::new("".to_string(), (0, 0), ("sans-serif", 10).into_font())
+            }
+        },
+    ))?;
 
     root.present()?;
     Ok(())
@@ -79,7 +199,7 @@ pub fn draw(
 pub fn GraphPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
     let graph_data = use_state(&cx, || Vec::<(String, models::ExerciseGraphQuery)>::new());
-    let search_term = use_state(&cx, || "".to_string());
+    // let search_term = use_state(&cx, || "".to_string());
 
     let fetch = use_future(&cx, (), |()| {
         to_owned![auth_token, graph_data];
