@@ -23,7 +23,7 @@ pub async fn get_exercise_sets(
         q = q.limit(limit)
     }
 
-    log::info!("{}", q.build(DbBackend::Sqlite).to_string());
+    log::info!("{}", q.build(DbBackend::Postgres).to_string());
 
     let res = q
         .into_model::<models::ExerciseSetJoinQuery>()
@@ -61,7 +61,7 @@ pub async fn get_exercise_sets(
 //             exercise_set::Relation::ExerciseName.def(),
 //         );
 
-//     log::info!("{}", q.build(DbBackend::Sqlite).to_string());
+//     log::info!("{}", q.build(DbBackend::Postgres).to_string());
 
 //     let res = q
 //         .into_model::<models::ExerciseSetWeightedQuery>()

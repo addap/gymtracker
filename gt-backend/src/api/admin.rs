@@ -40,7 +40,7 @@ pub async fn merge_names(
         .col_expr(exercise_set::Column::NameId, Expr::value(expand_name_id))
         .filter(exercise_set::Column::NameId.eq(delete_name.id));
 
-    log::info!("{}", q.build(DbBackend::Sqlite).to_string());
+    log::info!("{}", q.build(DbBackend::Postgres).to_string());
 
     let res_update = q.exec(&state.conn).await?;
     let _res_delete = delete_name.delete(&state.conn).await?;

@@ -20,7 +20,7 @@ pub async fn get_weighted_exercise_set_prs_for_user(
             exercise_set::Relation::ExerciseName.def(),
         );
 
-    log::info!("{}", q.build(DbBackend::Sqlite).to_string());
+    log::info!("{}", q.build(DbBackend::Postgres).to_string());
 
     let res = q
         .into_model::<models::ExerciseSetWeightedQuery>()
@@ -61,7 +61,7 @@ pub async fn get_bodyweight_exercise_set_prs_for_user(
             exercise_set::Relation::ExerciseName.def(),
         );
 
-    log::info!("{}", q.build(DbBackend::Sqlite).to_string());
+    log::info!("{}", q.build(DbBackend::Postgres).to_string());
 
     let res = q
         .into_model::<models::ExerciseSetBodyweightQuery>()
