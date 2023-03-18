@@ -5,13 +5,13 @@ services:
     image: gymtracker
     build: .
     env_file:
-      - .env.docker
+      - .docker.env
     ports:
       - "8000:8000"
   postgres:
     image: postgres:15
     env_file:
-      - .env.docker
+      - .docker.env
     volumes:
       - "pgdata:/var/lib/postgresql/data"
 volumes:

@@ -4,7 +4,7 @@ use chrono::Duration;
 use dioxus::prelude::*;
 use fermi::use_read;
 use itertools::Itertools;
-use log::{error, info};
+use log::error;
 use ordered_float::OrderedFloat;
 use plotters::prelude::*;
 use plotters_canvas::CanvasBackend;
@@ -263,7 +263,7 @@ pub fn GraphPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     });
     // let search_term = use_state(&cx, || "".to_string());
 
-    let fetch = use_future(&cx, (), |()| {
+    let _fetch = use_future(&cx, (), |()| {
         to_owned![auth_token, graph_data];
         let display_message = cx.props.display_message.clone();
 

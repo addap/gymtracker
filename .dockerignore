@@ -3,5 +3,5 @@ target/
 
 Dockerfile
 .docker*
-.env*
+*.env
 *.md

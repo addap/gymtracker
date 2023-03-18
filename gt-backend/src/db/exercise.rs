@@ -1,9 +1,7 @@
-use std::collections::HashMap;
-use std::hash::Hash;
-
 use chrono::NaiveDate;
 use itertools::Itertools;
 use sea_orm::*;
+use std::collections::HashMap;
 
 use crate::Result;
 use gt_core::entities::{prelude::*, *};
@@ -75,7 +73,6 @@ pub async fn get_exercise_graphs(
 
     let mut data_per_name: HashMap<String, HashMap<NaiveDate, Vec<(f64, i32)>>> = HashMap::new();
 
-    // process
     for jq in data {
         // If we have not added data for this exercise, insert a new HashMap for this exercise.
         if !data_per_name.contains_key(&jq.name) {
