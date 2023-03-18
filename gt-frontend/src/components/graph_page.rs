@@ -76,6 +76,7 @@ pub fn Graph<'a>(cx: Scope<'a, GraphProps<'a>>) -> Element<'a> {
 
     cx.render(rsx! {
         div {
+            style: "overflow-x: auto; overflow-y: hidden;",
             h3 {
                 cx.props.data.name.clone()
             }
