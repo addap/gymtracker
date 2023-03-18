@@ -60,6 +60,10 @@ async fn main() -> anyhow::Result<()> {
             get(api::exercise::get_all_exercise_names).post(api::exercise::add_exercise_name),
         )
         .route(
+            "/exercise/graph",
+            get(api::exercise::get_exercise_graph_for_user),
+        )
+        .route(
             "/exercise/set",
             get(api::exercise::get_all_exercise_sets_for_user)
                 .post(api::exercise::add_exercise_set_for_user)

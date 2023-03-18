@@ -1,3 +1,8 @@
+use std::collections::HashMap;
+use std::hash::Hash;
+
+use chrono::NaiveDate;
+use itertools::Itertools;
 use sea_orm::*;
 
 use crate::Result;
@@ -44,6 +49,65 @@ pub async fn get_exercise_sets(
         })
         .collect::<Result<Vec<_>>>()?;
 
+    Ok(res)
+}
+
+pub async fn get_exercise_graphs(
+    user_id: i32,
+    conn: &DatabaseConnection,
+) -> Result<Vec<models::ExerciseGraphQuery>> {
+    let q = ExerciseSet::find()
+        .filter(exercise_set::Column::UserId.eq(user_id))
+        .filter(exercise_name::Column::Kind.eq(models::ExerciseKind::Weighted))
+        .column_as(exercise_name::Column::Name, "name")
+        .order_by(exercise_set::Column::NameId, Order::Asc)
+        .join(
+            JoinType::InnerJoin,
+            exercise_set::Relation::ExerciseName.def(),
+        );
+
+    log::info!("{}", q.build(DbBackend::Postgres).to_string());
+
+    let data = q
+        .into_model::<models::ExerciseGraphJoinQuery>()
+        .all(conn)
+        .await?;
+
+    let mut data_per_name: HashMap<String, HashMap<NaiveDate, Vec<(f64, i32)>>> = HashMap::new();
+
+    // process
+    for jq in data {
+        // If we have not added data for this exercise, insert a new HashMap for this exercise.
+        if !data_per_name.contains_key(&jq.name) {
+            data_per_name.insert(jq.name.clone(), HashMap::new());
+        }
+        let data_per_date = data_per_name.get_mut(&jq.name).unwrap();
+
+        // If we have not added data for this exercise for this date, insert a new Vector for this date.
+        if !data_per_date.contains_key(&jq.created_at.date()) {
+            data_per_date.insert(jq.created_at.date(), Vec::new());
+        }
+        let data_weights = data_per_date.get_mut(&jq.created_at.date()).unwrap();
+
+        // If we have added both before, extend the existing Vector.
+        data_weights.push((jq.weight, jq.reps));
+    }
+
+    let res = data_per_name
+        .into_iter()
+        .sorted_by(|(name1, _), (name2, _)| name1.cmp(&name2))
+        .map(|(name, per_date_map)| {
+            let per_date = per_date_map
+                .into_iter()
+                .sorted_by(|(date1, _), (date2, _)| date1.cmp(&date2))
+                .map(|(date, weights)| models::ExerciseGraphQueryPerDate { date, weights })
+                .collect();
+            models::ExerciseGraphQuery {
+                name: name.to_string(),
+                per_date,
+            }
+        })
+        .collect();
     Ok(res)
 }
 

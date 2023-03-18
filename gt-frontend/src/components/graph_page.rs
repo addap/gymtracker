@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 use anyhow::{anyhow, Result};
-use chrono::{Duration, NaiveDate};
+use chrono::Duration;
 use dioxus::prelude::*;
 use fermi::use_read;
 use itertools::Itertools;
@@ -18,9 +18,12 @@ use crate::{
 };
 use gt_core::models;
 
+const PADDING_DAYS: i64 = 1;
+
 #[derive(Props)]
 pub struct GraphProps<'a> {
-    data: &'a (String, models::ExerciseGraphQuery),
+    canvas_id: &'a String,
+    data: &'a models::ExerciseGraphQuery,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -54,26 +57,32 @@ impl LabelPosition {
 
 pub fn Graph<'a>(cx: Scope<'a, GraphProps<'a>>) -> Element<'a> {
     use_future(&cx, (), |()| {
+        let canvas_id = cx.props.canvas_id.clone();
         let data = cx.props.data.clone();
 
         async move {
             //
-            match draw(&data.0, &data.1) {
+            match draw(&canvas_id, &data) {
                 Ok(()) => (),
                 Err(e) => error!("{}", e),
             }
         }
     });
 
+    let from_date = cx.props.data.per_date.first().unwrap().date - Duration::days(PADDING_DAYS);
+    let to_date = (cx.props.data.per_date.last().unwrap().date + Duration::days(PADDING_DAYS))
+        .max(from_date + Duration::days(7));
+    let width = (to_date - from_date).num_days() * 60;
+
     cx.render(rsx! {
         div {
             h3 {
-                cx.props.data.1.name.clone()
+                cx.props.data.name.clone()
             }
             canvas {
-                id: cx.props.data.0.as_str(),
+                id: cx.props.canvas_id.as_str(),
                 height: 500,
-                width: 500
+                width: width
             }
         }
     })
@@ -90,10 +99,9 @@ pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
         return Err(anyhow!("No data available."));
     }
 
-    let (from_date, to_date) = (
-        data.per_date.first().unwrap().date - Duration::days(1),
-        data.per_date.last().unwrap().date + Duration::days(1),
-    );
+    let from_date = data.per_date.first().unwrap().date - Duration::days(PADDING_DAYS);
+    let to_date = (data.per_date.last().unwrap().date + Duration::days(PADDING_DAYS))
+        .max(from_date + Duration::days(7));
 
     // TODO If I don't want to draw each individual date I have to give a slice of NaiveDate to build_cartesian_2d.
     // However, this leads to some trait bound error in draw_series I have not been able to solve.
@@ -130,6 +138,7 @@ pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
 
     chart
         .configure_mesh()
+        .x_labels((to_date - from_date).num_days() as usize)
         .y_max_light_lines(2)
         .x_max_light_lines(0)
         // TODO RotateAngle(45) would have been nice.
@@ -146,30 +155,30 @@ pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
     let points = data.per_date.iter().flat_map(|exg| {
         exg.weights
             .iter()
-            .map(|(weight, reps)| (exg.date, *weight, *reps))
-            .sorted_by(|a, b| a.1.total_cmp(&b.1))
+            .sorted_by(|a, b| a.0.total_cmp(&b.0).then(b.1.cmp(&a.1)))
             .scan(
                 (LabelPosition::new(), None),
-                |(label_pos, opt_last), coord| {
-                    if let Some(last) = opt_last {
-                        if *last == coord.1 {
+                |(label_pos, opt_last_weight), (weight, reps)| {
+                    if let Some(last) = opt_last_weight {
+                        if *last == weight {
                             if let Some(next_pos) = label_pos.next() {
                                 *label_pos = next_pos;
                             } else {
                                 // When there is no next label position we just return None to not print a label.
-                                return Some((coord.0, coord.1, coord.2, None));
+                                return Some((weight, reps, None));
                             }
                         } else {
                             *label_pos = LabelPosition::new();
-                            *opt_last = Some(coord.1);
+                            *opt_last_weight = Some(weight);
                         }
                     } else {
                         *label_pos = LabelPosition::new();
-                        *opt_last = Some(coord.1);
+                        *opt_last_weight = Some(weight);
                     }
-                    Some((coord.0, coord.1, coord.2, Some(*label_pos)))
+                    Some((weight, reps, Some(*label_pos)))
                 },
             )
+            .map(|(weight, reps, label_pos)| (exg.date, *weight, *reps, label_pos))
     });
 
     chart.draw_series(PointSeries::of_element(
@@ -203,48 +212,54 @@ pub fn GraphPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
 
     let fetch = use_future(&cx, (), |()| {
         to_owned![auth_token, graph_data];
-        // let display_message = cx.props.display_message.clone();
-
-        // async move {
-        //     let client = reqwest::Client::new();
-        //     let res = client
-        //         .get(api::EXERCISE_GRAPH.as_str())
-        //         .bearer_auth(auth_token.clone().unwrap_or("".into()))
-        //         .send()
-        //         .await
-        //         .handle_result(UIMessage::error(
-        //             "Requesting exercise graph failed.".to_string(),
-        //         ))
-        //         .await;
-
-        //     match res {
-        //         Ok(data) => graph_data.set(data),
-        //         Err(e) => {
-        //             display_message.send(e);
-        //         }
-        //     }
-        // }
+        let display_message = cx.props.display_message.clone();
 
         async move {
-            let dummy_data = models::ExerciseGraphQuery {
-                name: "Bench Press".to_string(),
-                per_date: vec![
-                    models::ExerciseGraphQueryPerDate {
-                        date: NaiveDate::from_ymd_opt(2023, 2, 27).unwrap(),
-                        weights: vec![(50.0, 12), (50.0, 10), (60.0, 5)],
-                    },
-                    models::ExerciseGraphQueryPerDate {
-                        date: NaiveDate::from_ymd_opt(2023, 3, 1).unwrap(),
-                        weights: vec![(60.0, 5), (60.0, 5), (60.0, 4)],
-                    },
-                    models::ExerciseGraphQueryPerDate {
-                        date: NaiveDate::from_ymd_opt(2023, 3, 6).unwrap(),
-                        weights: vec![(60.0, 4), (60.0, 4), (60.0, 3)],
-                    },
-                ],
-            };
-            graph_data.set(vec![(format!("canvas-{}", dummy_data.name), dummy_data)]);
+            let client = reqwest::Client::new();
+            let res = client
+                .get(api::EXERCISE_GRAPH.as_str())
+                .bearer_auth(auth_token.clone().unwrap_or("".into()))
+                .send()
+                .await
+                .handle_result::<Vec<models::ExerciseGraphQuery>>(UIMessage::error(
+                    "Requesting exercise graph failed.".to_string(),
+                ))
+                .await;
+
+            match res {
+                Ok(data) => {
+                    let data_with_id = data
+                        .into_iter()
+                        .map(|exg| (format!("canvas-{}", exg.name), exg))
+                        .collect();
+                    graph_data.set(data_with_id);
+                }
+                Err(e) => {
+                    display_message.send(e);
+                }
+            }
         }
+
+        // async move {
+        //     let dummy_data = models::ExerciseGraphQuery {
+        //         name: "Bench Press".to_string(),
+        //         per_date: vec![
+        //             models::ExerciseGraphQueryPerDate {
+        //                 date: NaiveDate::from_ymd_opt(2023, 2, 27).unwrap(),
+        //                 weights: vec![(50.0, 12), (50.0, 10), (60.0, 5)],
+        //             },
+        //             models::ExerciseGraphQueryPerDate {
+        //                 date: NaiveDate::from_ymd_opt(2023, 3, 1).unwrap(),
+        //                 weights: vec![(60.0, 5), (60.0, 5), (60.0, 4)],
+        //             },
+        //             models::ExerciseGraphQueryPerDate {
+        //                 date: NaiveDate::from_ymd_opt(2023, 3, 6).unwrap(),
+        //                 weights: vec![(60.0, 4), (60.0, 4), (60.0, 3)],
+        //             },
+        //         ],
+        //     };
+        //     graph_data.set(vec![(format!("canvas-{}", dummy_data.name), dummy_data)]);
+        // }
     });
 
     // We render a list of checkboxes to toggle the visibility of graphs for individual exercises.
@@ -255,7 +270,7 @@ pub fn GraphPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let graphs = graph_data
         .get()
         .iter()
-        .map(|exg| rsx! { Graph { data: &exg } });
+        .map(|(canvas_id, exg)| rsx! { Graph { canvas_id: canvas_id, data: exg } });
     cx.render(rsx! {
         graphs
     })

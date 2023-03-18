@@ -171,3 +171,11 @@ pub async fn delete_exercise_set_for_user(
 
     Ok(Json(()))
 }
+
+pub async fn get_exercise_graph_for_user(
+    State(state): State<AppState>,
+    Extension(user): Extension<user_login::Model>,
+) -> Result<Json<Vec<models::ExerciseGraphQuery>>> {
+    let res = db::exercise::get_exercise_graphs(user.id, &state.conn).await?;
+    Ok(Json(res))
+}
