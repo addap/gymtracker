@@ -23,7 +23,7 @@ use components as c;
 pub use gt_core::APP_BASE;
 use messages::UIMessage;
 
-#[wasm_bindgen(module = "/js/rollup.js")]
+#[wasm_bindgen]
 extern "C" {
     static JS_BANNER: String;
     static JS_MESSAGE_TIMEOUT: i32;
