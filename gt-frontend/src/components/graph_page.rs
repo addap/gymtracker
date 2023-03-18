@@ -20,6 +20,7 @@ use crate::{
 use gt_core::models;
 
 const PADDING_DAYS: i64 = 1;
+const PADDING_KG: f64 = 5.0;
 
 #[derive(Props)]
 pub struct GraphProps<'a> {
@@ -99,7 +100,8 @@ pub fn Graph<'a>(cx: Scope<'a, GraphProps<'a>>) -> Element<'a> {
 pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
     let backend = CanvasBackend::new(canvas_id).expect("cannot find canvas");
     let root = backend.into_drawing_area();
-    let font: FontDesc = ("sans-serif", 20.0).into();
+    let font_big: FontDesc = ("sans-serif", 20.0).into();
+    let font_small: FontDesc = ("sans-serif", 10.0).into();
 
     root.fill(&WHITE)?;
 
@@ -107,6 +109,7 @@ pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
         return Err(anyhow!("No data available."));
     }
 
+    // On the x-axis we render at least a week and leave PADDING_DAYS free to the left and right.
     let from_date = data.per_date.first().unwrap().date - Duration::days(PADDING_DAYS);
     let to_date = (data.per_date.last().unwrap().date + Duration::days(PADDING_DAYS))
         .max(from_date + Duration::days(7));
@@ -120,36 +123,50 @@ pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
     //     .collect::<Vec<_>>()
     //     .as_slice();
 
+    // On the y-axis we render the max and min of submitted weights +- PADDING_KG.
     let (from_kg, to_kg) = (
         data.per_date
             .iter()
             .flat_map(|exg| exg.weights.iter().map(|(weight, _)| OrderedFloat(*weight)))
             .min()
-            .map(|f| f - 5.0)
+            .map(|f| f - PADDING_KG)
             .unwrap_or(OrderedFloat(0.0))
             .0,
         data.per_date
             .iter()
             .flat_map(|exg| exg.weights.iter().map(|(weight, _)| OrderedFloat(*weight)))
             .max()
-            .map(|f| f + 5.0)
+            .map(|f| f + PADDING_KG)
             .unwrap_or(OrderedFloat(100.0))
             .0,
     );
 
+    // Create the chart with y-axes on both sides.
+    // TODO The caption should be positioned to the right eventually.
     let mut chart = ChartBuilder::on(&root)
         .margin(10u32)
-        .caption(format!("{} Progress", data.name), font)
+        .caption(
+            format!("{} Progress", data.name),
+            font_big, // anchoring caption at the right does not seem to work.
+                      // .with_anchor::<RGBColor>(text_anchor::Pos {
+                      //     h_pos: text_anchor::HPos::Right,
+                      //     v_pos: text_anchor::VPos::Center,
+                      // }),
+        )
         .x_label_area_size(30u32)
+        .y_label_area_size(30u32)
         .right_y_label_area_size(30u32)
         .build_cartesian_2d(from_date..to_date, from_kg..to_kg)?;
 
+    // Further configure the chart.
+    // We want labels on every day and almost no light lines between the datapoints.
+    // TODO The date labels should be rotated by 45 degrees eventually.
     chart
         .configure_mesh()
         .x_labels((to_date - from_date).num_days() as usize)
         .y_max_light_lines(2)
         .x_max_light_lines(0)
-        // TODO RotateAngle(45) would have been nice.
+        // RotateAngle(45) would have been nice.
         // Also, rotating by 90 degrees and using an offset also rotates the offset. This seems like a bug.
         // .x_label_offset(30)
         // .x_label_style(
@@ -160,6 +177,10 @@ pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
         .x_label_formatter(&|date| date.format("%d. %b").to_string())
         .draw()?;
 
+    // Compute coordinates for points that signify a set.
+    // x = date of submission
+    // y = weight of the set
+    // We add several labels (# of reps) to each coordinate, the position of the labels is also computed here.
     let points = data.per_date.iter().flat_map(|exg| {
         exg.weights
             .iter()
@@ -189,6 +210,7 @@ pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
             .map(|(weight, reps, label_pos)| (exg.date, *weight, *reps, label_pos))
     });
 
+    // Draw the points for each set. The circle is scaled according to the number of reps.
     chart.draw_series(PointSeries::of_element(
         points,
         5.0,
@@ -201,10 +223,10 @@ pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
                     + Text::new(
                         format!("×{}", reps),
                         label_pos.into_coord(),
-                        ("sans-serif", 10).into_font(),
+                        font_small.clone(),
                     )
             } else {
-                element + Text::new("".to_string(), (0, 0), ("sans-serif", 10).into_font())
+                element + Text::new("".to_string(), (0, 0), font_small.clone())
             }
         },
     ))?;
@@ -255,33 +277,10 @@ pub fn GraphPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 }
             }
         }
-
-        // async move {
-        //     let dummy_data = models::ExerciseGraphQuery {
-        //         name: "Bench Press".to_string(),
-        //         per_date: vec![
-        //             models::ExerciseGraphQueryPerDate {
-        //                 date: NaiveDate::from_ymd_opt(2023, 2, 27).unwrap(),
-        //                 weights: vec![(50.0, 12), (50.0, 10), (60.0, 5)],
-        //             },
-        //             models::ExerciseGraphQueryPerDate {
-        //                 date: NaiveDate::from_ymd_opt(2023, 3, 1).unwrap(),
-        //                 weights: vec![(60.0, 5), (60.0, 5), (60.0, 4)],
-        //             },
-        //             models::ExerciseGraphQueryPerDate {
-        //                 date: NaiveDate::from_ymd_opt(2023, 3, 6).unwrap(),
-        //                 weights: vec![(60.0, 4), (60.0, 4), (60.0, 3)],
-        //             },
-        //         ],
-        //     };
-        //     graph_data.set(vec![(format!("canvas-{}", dummy_data.name), dummy_data)]);
-        // }
     });
 
     // We render a list of checkboxes to toggle the visibility of graphs for individual exercises.
     // let exercise_names: Vec<String> = graph_data.iter().map(|exg| exg.name.clone()).collect();
-
-    // let dummy_data = graph_data.iter().find(|exg| exg.name == "Bench Press");
 
     let graphs = graph_data
         .get()
