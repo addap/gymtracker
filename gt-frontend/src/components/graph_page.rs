@@ -231,6 +231,27 @@ pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
         },
     ))?;
 
+    // Compute coordinates for a line connecting each day.
+    // y = The average weight lifted during each set of the day.
+    // This is done to visualize average improvements over time.
+    let line = data.per_date.iter().map(|exg| {
+        let mut total_weight = 0.0;
+        let mut total_reps = 0;
+
+        for &(weight, reps) in &exg.weights {
+            total_weight += weight * reps as f64;
+            total_reps += reps;
+        }
+
+        let avg_weight = total_weight / total_reps as f64;
+
+        (exg.date, avg_weight)
+    });
+
+    // Draw the line.
+    // TODO Scale stroke_width according to number of reps?
+    chart.draw_series(LineSeries::new(line, BLUE))?;
+
     root.present()?;
     Ok(())
 }
