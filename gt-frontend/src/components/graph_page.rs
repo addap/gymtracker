@@ -14,6 +14,7 @@ use crate::{
     auth::ACTIVE_AUTH_TOKEN,
     messages::{MessageProps, UIMessage},
     request_ext::RequestExt,
+    scroll_to_end,
     util::lerp,
 };
 use gt_core::models;
@@ -23,6 +24,7 @@ const PADDING_DAYS: i64 = 1;
 #[derive(Props)]
 pub struct GraphProps<'a> {
     canvas_id: &'a String,
+    canvas_wrapper_id: &'a String,
     data: &'a models::ExerciseGraphQuery,
 }
 
@@ -57,13 +59,17 @@ impl LabelPosition {
 
 pub fn Graph<'a>(cx: Scope<'a, GraphProps<'a>>) -> Element<'a> {
     use_future(&cx, (), |()| {
+        let canvas_wrapper_id = cx.props.canvas_wrapper_id.clone();
         let canvas_id = cx.props.canvas_id.clone();
         let data = cx.props.data.clone();
 
         async move {
             //
             match draw(&canvas_id, &data) {
-                Ok(()) => (),
+                Ok(()) => {
+                    // JS function to scroll the canvas all the way to the right.
+                    scroll_to_end(&canvas_wrapper_id);
+                }
                 Err(e) => error!("{}", e),
             }
         }
@@ -77,6 +83,7 @@ pub fn Graph<'a>(cx: Scope<'a, GraphProps<'a>>) -> Element<'a> {
     cx.render(rsx! {
         div {
             style: "overflow-x: auto; overflow-y: hidden;",
+            id: cx.props.canvas_wrapper_id.as_str(),
             h3 {
                 cx.props.data.name.clone()
             }
@@ -208,7 +215,9 @@ pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
 
 pub fn GraphPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let auth_token = use_read(&cx, ACTIVE_AUTH_TOKEN);
-    let graph_data = use_state(&cx, || Vec::<(String, models::ExerciseGraphQuery)>::new());
+    let graph_data = use_state(&cx, || {
+        Vec::<(String, String, models::ExerciseGraphQuery)>::new()
+    });
     // let search_term = use_state(&cx, || "".to_string());
 
     let fetch = use_future(&cx, (), |()| {
@@ -231,7 +240,13 @@ pub fn GraphPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 Ok(data) => {
                     let data_with_id = data
                         .into_iter()
-                        .map(|exg| (format!("canvas-{}", exg.name), exg))
+                        .map(|exg| {
+                            (
+                                format!("canvas-{}", exg.name),
+                                format!("canvas-wrapper-{}", exg.name),
+                                exg,
+                            )
+                        })
                         .collect();
                     graph_data.set(data_with_id);
                 }
@@ -271,7 +286,15 @@ pub fn GraphPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let graphs = graph_data
         .get()
         .iter()
-        .map(|(canvas_id, exg)| rsx! { Graph { canvas_id: canvas_id, data: exg } });
+        .map(|(canvas_id, canvas_wrapper_id, exg)| {
+            rsx! {
+                Graph {
+                    canvas_id: canvas_id,
+                    canvas_wrapper_id: canvas_wrapper_id,
+                    data: exg
+                }
+            }
+        });
     cx.render(rsx! {
         graphs
     })

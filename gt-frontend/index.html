@@ -65,6 +65,14 @@
             return fileStringReady;
         }
     </script>
+    <script>
+        function scroll_to_end(id) {
+            let element = document.getElementById(id);
+            if (element) {
+                element.scrollLeft = element.scrollWidth;
+            }
+        }
+    </script>
 </body>
 
 </html>

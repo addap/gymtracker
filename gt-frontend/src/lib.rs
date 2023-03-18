@@ -36,6 +36,7 @@ extern "C" {
     fn attachToFile();
     fn getFileString() -> String;
     fn getFileStringReady() -> bool;
+    fn scroll_to_end(id: &str);
 }
 
 lazy_static! {
