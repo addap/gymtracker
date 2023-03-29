@@ -10,7 +10,7 @@ use std::io::Cursor;
 use crate::{
     api,
     auth::ACTIVE_AUTH_TOKEN,
-    components::nav::{WrapperUserPicture, USER_PICTURE},
+    components::nav::{self, WrapperUserPicture, USER_PICTURE},
     messages::{MessageProps, UIMessage},
     request_ext::RequestExt,
     to_dataurl,
@@ -166,49 +166,82 @@ pub fn UserPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 button {
                     r#type: "button",
                     class: "col-3 col-sm-1 btn btn-sm btn-outline-success",
-                    onclick: move |_| cx.spawn({
-                        to_owned![auth_token, display_name, user_picture_bytes];
-                        let display_message = cx.props.display_message.clone();
+                    onclick: move |_| {
+                        let user_info = models::UserInfo {
+                            display_name: (*display_name.current()).clone(),
+                        };
+                        let bytes = (*user_picture_bytes.current()).clone();
 
-                        async move {
-                            let client = reqwest::Client::new();
+                        cx.spawn({
+                            to_owned![auth_token];
+                            let display_message = cx.props.display_message.clone();
 
-                            let user_info = models::UserInfo {
-                                display_name: (*display_name.current()).clone(),
-                            };
+                            async move {
+                                let client = reqwest::Client::new();
 
-                            let res = client.post(api::USER_INFO.as_str())
-                                .json(&user_info)
-                                .bearer_auth(auth_token.clone().unwrap_or("".into()))
-                                .send().await
-                                .handle_result(UIMessage::error("Submitting user info failed.".to_string())).await;
-
-                            match res {
-                                Ok(()) => {
-                                    display_message.send(UIMessage::info(format!("Updated user info.")));
-                                }
-                                Err(e) => display_message.send(e)
-                            }
-
-                            let bytes = (*user_picture_bytes.current()).clone();
-
-                            if !bytes.is_empty() {
-                                let res = client.post(api::USER_PICTURE.as_str())
-                                    .body(bytes)
-                                    .bearer_auth(auth_token.unwrap_or("".into()))
+                                let res = client.post(api::USER_INFO.as_str())
+                                    .json(&user_info)
+                                    .bearer_auth(auth_token.clone().unwrap_or("".into()))
                                     .send().await
-                                    .handle_result(UIMessage::error("Submitting user picture failed.".to_string())).await;
+                                    .handle_result(UIMessage::error("Submitting user info failed.".to_string())).await;
 
                                 match res {
                                     Ok(()) => {
-                                        display_message.send(UIMessage::info(format!("Updated user picture.")));
+                                        display_message.send(UIMessage::info(format!("Updated user info.")));
+                                    }
+                                    Err(e) => display_message.send(e)
+                                }
+
+                                if !bytes.is_empty() {
+                                    let res = client.post(api::USER_PICTURE.as_str())
+                                        .body(bytes)
+                                        .bearer_auth(auth_token.unwrap_or("".into()))
+                                        .send().await
+                                        .handle_result(UIMessage::error("Submitting user picture failed.".to_string())).await;
+
+                                    match res {
+                                        Ok(()) => {
+                                            display_message.send(UIMessage::info(format!("Updated user picture.")));
+                                        }
+                                        Err(e) => display_message.send(e)
+                                    }
+                                }
+                            }
+                        })
+                    },
+                    "Save"
+                }
+            }
+            div {
+                button {
+                    r#type: "button",
+                    class: "col-3 col-sm-1 btn btn-sm btn-outline-danger",
+                    onclick: move |_| {
+                        nav::reset_user_picture(&cx);
+                        user_picture_bytes.set(Vec::new());
+
+                        cx.spawn({
+                            to_owned![auth_token];
+                            let display_message = cx.props.display_message.clone();
+
+                            async move {
+                                let client = reqwest::Client::new();
+
+                                let res = client.delete(api::USER_PICTURE.as_str())
+                                    .bearer_auth(auth_token.unwrap_or("".into()))
+                                    .send().await
+                                    .handle_result(UIMessage::error("Deleting user picture failed.".to_string())).await;
+
+                                match res {
+                                    Ok(()) => {
+                                        display_message.send(UIMessage::info(format!("Deleted user picture.")));
                                     }
                                     Err(e) => display_message.send(e)
                                 }
                             }
-                        }
-                    }),
-                    "Save"
+                        })
+                    },
+                    "Delete"
                 }
             }
         }

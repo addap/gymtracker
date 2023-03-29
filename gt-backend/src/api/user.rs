@@ -192,3 +192,20 @@ pub async fn change_user_picture(
 
     Ok(Json(()))
 }
+
+pub async fn delete_user_picture(
+    State(state): State<AppState>,
+    Extension(user): Extension<user_login::Model>,
+) -> Result<Json<()>> {
+    let mut user_info: user_info::ActiveModel = user
+        .find_related(UserInfo)
+        .one(&state.conn)
+        .await?
+        .ok_or(AppError::ResourceNotFound)?
+        .into();
+
+    user_info.photo = ActiveValue::Set(None);
+    user_info.update(&state.conn).await?;
+
+    Ok(Json(()))
+}

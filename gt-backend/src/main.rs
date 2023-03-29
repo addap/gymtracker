@@ -83,7 +83,9 @@ async fn main() -> anyhow::Result<()> {
         )
         .route(
             "/user/picture",
-            get(api::user::get_user_picture).post(api::user::change_user_picture),
+            get(api::user::get_user_picture)
+                .post(api::user::change_user_picture)
+                .delete(api::user::delete_user_picture),
         )
         .route(
             "/user/info-ts",
