@@ -9,7 +9,7 @@ use gt_core::models::AuthToken;
 
 pub static ACTIVE_AUTH_TOKEN: Atom<Option<AuthToken>> = |_| None;
 
-pub fn is_superuser<'a, T>(cx: &Scope<'a, T>) -> bool {
+pub fn is_superuser<'a, T: 'a>(cx: &'a Scope<'a, T>) -> bool {
     let opt_auth_token = use_read(cx, ACTIVE_AUTH_TOKEN);
     let opt = (|| {
         let auth_token = opt_auth_token.as_ref()?;
@@ -21,7 +21,7 @@ pub fn is_superuser<'a, T>(cx: &Scope<'a, T>) -> bool {
     opt.unwrap_or(false)
 }
 
-pub fn is_logged_in<'a, T>(cx: &Scope<'a, T>) -> bool {
+pub fn is_logged_in<'a, T: 'a>(cx: &'a Scope<'a, T>) -> bool {
     let opt_auth_token = use_read(cx, ACTIVE_AUTH_TOKEN);
     opt_auth_token.is_some()
 }
@@ -38,7 +38,7 @@ fn get_stored_auth_token() -> Option<AuthToken> {
     stored_token
 }
 
-pub fn init_auth_token(cx: &Scope) {
+pub fn init_auth_token<'a, T>(cx: &'a Scope<'a, T>) {
     let setter = use_set(&cx, ACTIVE_AUTH_TOKEN);
     let stored_token = get_stored_auth_token();
 

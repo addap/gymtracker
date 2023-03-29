@@ -18,7 +18,7 @@ use crate::{components as c, to_dataurl};
 pub struct WrapperUserPicture<T>(pub T);
 pub static USER_PICTURE: Atom<WrapperUserPicture<String>> = |_| WrapperUserPicture((*LOGO).clone());
 
-pub fn reset_user_picture<'a, T: 'a>(cx: &'a Scope<T>) {
+pub fn reset_user_picture<'a, T: 'a>(cx: &'a Scope<'a, T>) {
     let user_picture = use_set(cx, USER_PICTURE);
     user_picture(WrapperUserPicture((*LOGO).clone()));
 }
