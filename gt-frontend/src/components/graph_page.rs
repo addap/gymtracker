@@ -233,10 +233,9 @@ pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
         },
     ))?;
 
-    // Compute coordinates for a line connecting each day.
-    // y = The average weight lifted during each set of the day.
-    // This is done to visualize average improvements over time.
-    let line = data.per_date.iter().map(|exg| {
+    // Compute coordinates for an average trendline to visualize average improvements over time.
+    // y = The mean weight lifted during each rep of the day.
+    let weighted_average = data.per_date.iter().map(|exg| {
         let mut total_weight = 0.0;
         let mut total_reps = 0;
 
@@ -245,14 +244,30 @@ pub fn draw(canvas_id: &str, data: &models::ExerciseGraphQuery) -> Result<()> {
             total_reps += reps;
         }
 
-        let avg_weight = total_weight / total_reps as f64;
+        let mean_weight = total_weight / total_reps as f64;
 
-        (exg.date, avg_weight)
+        (exg.date, mean_weight)
     });
 
     // Draw the line.
     // TODO Scale stroke_width according to number of reps?
-    chart.draw_series(LineSeries::new(line, BLUE))?;
+    chart.draw_series(LineSeries::new(weighted_average, BLUE))?;
+
+    // Compute coordinates for a max trendline to visualize PR weight improvements over time.
+    // y = The max weight lifted during day.
+    let max_weight = data.per_date.iter().map(|exg| {
+        let max_weight = exg
+            .weights
+            .iter()
+            .map(|(weight, _)| OrderedFloat(*weight))
+            .max()
+            .unwrap_or(OrderedFloat(0.0));
+
+        (exg.date, max_weight.0)
+    });
+
+    // Draw the line.
+    chart.draw_series(LineSeries::new(max_weight, GREEN))?;
 
     root.present()?;
     Ok(())
