@@ -1,4 +1,6 @@
 #![allow(non_snake_case)]
+use std::collections::VecDeque;
+
 use const_format::concatcp;
 use derive_more::Deref;
 use dioxus::prelude::*;
@@ -10,9 +12,10 @@ use reqwest::StatusCode;
 use crate::{
     api,
     auth::{is_logged_in, is_superuser, ACTIVE_AUTH_TOKEN},
-    APP_BASE, LOGO,
+    components as c,
+    messages::UIMessage,
+    to_dataurl, APP_BASE, LOGO,
 };
-use crate::{components as c, to_dataurl};
 
 #[derive(Deref)]
 pub struct WrapperUserPicture<T>(pub T);
@@ -23,7 +26,8 @@ pub fn reset_user_picture<'a, T: 'a>(cx: &'a Scope<'a, T>) {
     user_picture(WrapperUserPicture((*LOGO).clone()));
 }
 
-pub fn Navbar(cx: Scope) -> Element {
+#[inline_props]
+pub fn Navbar<'a>(cx: Scope<'a>, ui_messages: &'a UseRef<VecDeque<UIMessage>>) -> Element<'a> {
     let auth_token = use_atom_state(&cx, ACTIVE_AUTH_TOKEN);
     let user_picture = use_atom_state(&cx, USER_PICTURE);
 
@@ -70,88 +74,95 @@ pub fn Navbar(cx: Scope) -> Element {
                 class: "navbar navbar-expand bg-body-secondary",
                 div {
                     class: "me-auto navbar-nav",
-            if is_logged_in(&cx) {
-                rsx!{
-                    div {
-                        class: "navbar-brand",
-                        img {
-                            src: "{user_picture.current().0}",
-                            width: 50,
-                            height: 50
-                        }
-                    }
-                    div {
-                        class: "nav-item navbar-text",
-                        Link {
-                            class: "nav-link",
-                            to: concatcp!(APP_BASE, "/"), "Home"
-                        }
-                    }
-                    div {
-                        class: "nav-item navbar-text",
-                        Link {
-                            class: "nav-link",
-                            to: concatcp!(APP_BASE, "/history"), "History"
-                        }
-                    }
-                    div {
-                        class: "nav-item navbar-text",
-                        Link {
-                            class: "nav-link",
-                            to: concatcp!(APP_BASE, "/pr"), "PR"
-                        }
-                    }
-                    div {
-                        class: "nav-item navbar-text",
-                        Link {
-                            class: "nav-link",
-                            to: concatcp!(APP_BASE, "/graph"), "Graph"
-                        }
-                    }
-                    div {
-                        class: "nav-item navbar-text",
-                        Link {
-                            class: "nav-link",
-                            to: concatcp!(APP_BASE, "/user"), "User"
-                        }
-                    }
-                    if is_superuser(&cx) {
-                        rsx! {
+                    if is_logged_in(&cx) {
+                        rsx!{
+                            div {
+                                class: "navbar-brand",
+                                img {
+                                    src: "{user_picture.current().0}",
+                                    width: 50,
+                                    height: 50
+                                }
+                            }
                             div {
                                 class: "nav-item navbar-text",
                                 Link {
                                     class: "nav-link",
-                                    to: concatcp!(APP_BASE, "/admin"), "Admin"
+                                    to: concatcp!(APP_BASE, "/"), "Home"
+                                }
+                            }
+                            div {
+                                class: "nav-item navbar-text",
+                                Link {
+                                    class: "nav-link",
+                                    to: concatcp!(APP_BASE, "/history"), "History"
+                                }
+                            }
+                            div {
+                                class: "nav-item navbar-text",
+                                Link {
+                                    class: "nav-link",
+                                    to: concatcp!(APP_BASE, "/pr"), "PR"
+                                }
+                            }
+                            div {
+                                class: "nav-item navbar-text",
+                                Link {
+                                    class: "nav-link",
+                                    to: concatcp!(APP_BASE, "/graph"), "Graph"
+                                }
+                            }
+                            div {
+                                class: "nav-item navbar-text",
+                                Link {
+                                    class: "nav-link",
+                                    to: concatcp!(APP_BASE, "/user"), "User"
+                                }
+                            }
+                            if is_superuser(&cx) {
+                                rsx! {
+                                    div {
+                                        class: "nav-item navbar-text",
+                                        Link {
+                                            class: "nav-link",
+                                            to: concatcp!(APP_BASE, "/admin"), "Admin"
+                                        }
+                                    }
+                                }
+                            }
+                            div {
+                                class: "nav-item",
+                                div {
+                                    class: "nav-link",
+                                    c::Logout {}
+                                }
+                            }
+                        }
+                    } else {
+                        rsx! {
+                            div {
+                                class: "nav-item",
+                                Link {
+                                    class: "nav-link",
+                                    to: concatcp!(APP_BASE, "/register"), "Register"
+                                }
+                            }
+                            div {
+                                class: "nav-item",
+                                Link {
+                                    class: "nav-link",
+                                    to: concatcp!(APP_BASE, "/login"), "Login"
                                 }
                             }
                         }
                     }
-                    div {
-                        class: "nav-item",
-                        div {
-                            class: "nav-link",
-                            c::Logout {}
-                        }
-                    }
-                }
-            } else {
-                rsx! {
-                    div {
-                        class: "nav-item",
-                        Link {
-                            class: "nav-link",
-                            to: concatcp!(APP_BASE, "/register"), "Register"
-                        }
-                    }
-                    div {
-                        class: "nav-item",
-                        Link {
-                            class: "nav-link",
-                            to: concatcp!(APP_BASE, "/login"), "Login"
-                        }
-                    }
                 }
             }
+            div {
+                style: "position: relative;",
+                div {
+                    style: "position: absolute; right: 0px; top: 0px; z-index: 999999;",
+                    c::Messages { ui_messages: cx.props.ui_messages }
                 }
             }
         }
