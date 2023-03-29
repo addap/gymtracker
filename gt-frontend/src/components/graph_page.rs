@@ -83,15 +83,17 @@ pub fn Graph<'a>(cx: Scope<'a, GraphProps<'a>>) -> Element<'a> {
 
     cx.render(rsx! {
         div {
-            style: "overflow-x: auto; overflow-y: hidden;",
-            id: cx.props.canvas_wrapper_id.as_str(),
             h3 {
                 cx.props.data.name.clone()
             }
-            canvas {
-                id: cx.props.canvas_id.as_str(),
-                height: 500,
-                width: width
+            div {
+                style: "overflow-x: auto; overflow-y: hidden;",
+                id: cx.props.canvas_wrapper_id.as_str(),
+                canvas {
+                    id: cx.props.canvas_id.as_str(),
+                    height: 500,
+                    width: width
+                }
             }
         }
     })
