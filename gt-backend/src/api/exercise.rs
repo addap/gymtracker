@@ -45,6 +45,7 @@ pub async fn get_all_exercise_names(
                                 .equals(exercise_name::Entity, exercise_name::Column::Id),
                         )
                         .order_by(exercise_set::Column::CreatedAt, Order::Desc)
+                        .order_by(exercise_set::Column::Id, Order::Desc)
                         .limit(1)
                         .to_owned(),
                 )),
@@ -64,6 +65,7 @@ pub async fn get_all_exercise_names(
                                 .equals(exercise_name::Entity, exercise_name::Column::Id),
                         )
                         .order_by(exercise_set::Column::CreatedAt, Order::Desc)
+                        .order_by(exercise_set::Column::Id, Order::Desc)
                         .limit(1)
                         .to_owned(),
                 )),
@@ -75,6 +77,7 @@ pub async fn get_all_exercise_names(
             Order::Desc,
             NullOrdering::Last,
         )
+        .order_by(exercise_set::Column::Id, Order::Desc)
         .to_owned();
 
     let res = models::ExerciseNameQuery::find_by_statement(StatementBuilder::build(
