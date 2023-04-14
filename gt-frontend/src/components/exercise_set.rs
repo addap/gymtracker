@@ -30,7 +30,7 @@ pub fn ExerciseSetWeighted<'a>(
             div {
                 class: "col-auto",
                 p { class: "fw-bold",
-                    format_weighted_reps(exs.reps, exs.weight) }
+                    format_running_sum(format_weighted_reps(exs.reps, exs.weight), exs.reps_sum) }
             } 
             div { class: "w-100" }
             div {
@@ -63,7 +63,7 @@ pub fn ExerciseSetBodyweight<'a>(
             div {
                 class: "col-auto",
                 p { class: "fw-bold",
-                    format_bodyweight_reps(exs.reps) }
+                    format_running_sum(format_bodyweight_reps(exs.reps), exs.reps_sum) }
             }
             div { class: "w-100" }
             div {

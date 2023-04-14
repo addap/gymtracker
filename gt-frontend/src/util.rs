@@ -9,11 +9,15 @@ pub fn format_date(t: DateTime<Local>) -> String {
 }
 
 pub fn format_weighted_reps(reps: i32, weight: f64) -> String {
-    format!("{} × {}kg", reps, weight)
+    format!("{} @ {}kg", reps, weight)
 }
 
 pub fn format_bodyweight_reps(reps: i32) -> String {
-    format!("{} × 身", reps)
+    format!("{} @ 身", reps)
+}
+
+pub fn format_running_sum(reps_fmt: String, reps_sum: i64) -> String {
+    format!("+ {} = {}", reps_fmt, reps_sum)
 }
 
 pub fn lerp(a: f64, b: f64, t: f64) -> f64 {

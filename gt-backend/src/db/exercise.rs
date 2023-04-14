@@ -1,5 +1,6 @@
 use chrono::NaiveDate;
 use itertools::Itertools;
+use migration::SimpleExpr;
 use sea_orm::*;
 use std::collections::HashMap;
 
@@ -12,10 +13,23 @@ pub async fn get_exercise_sets(
     limit_opt: Option<u64>,
     conn: &DatabaseConnection,
 ) -> Result<Vec<models::ExerciseSetQuery>> {
+    /*
+    SELECT
+        *,
+        exercise_name.name AS name,
+        exercise_name.kind AS kind,
+        SUM (reps) OVER (PARTITION BY name_id, date_trunc('day', created_at) ORDER BY created_at ASC, exercise_set.id ASC) AS reps_total
+    FROM exercise_set
+    JOIN exercise_name
+    ON exercise_set.name_id = exercise_name.id
+    ORDER BY created_at DESC, id DESC
+    ;
+     */
     let mut q = ExerciseSet::find()
         .filter(exercise_set::Column::UserId.eq(user_id))
         .column_as(exercise_name::Column::Name, "name")
         .column_as(exercise_name::Column::Kind, "kind")
+        .column_as(SimpleExpr::Custom("SUM (reps) OVER (PARTITION BY name_id, date_trunc('day', created_at) ORDER BY created_at ASC, exercise_set.id ASC)".to_string()), "reps_sum")
         .order_by(exercise_set::Column::CreatedAt, Order::Desc)
         .order_by(exercise_set::Column::Id, Order::Desc)
         .join(

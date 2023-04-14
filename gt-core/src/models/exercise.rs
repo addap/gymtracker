@@ -71,6 +71,7 @@ pub struct ExerciseSetJoinQuery {
     pub name: String,
     pub kind: ExerciseKind,
     pub reps: Option<i32>,
+    pub reps_sum: Option<i64>,
     pub weight: Option<f64>,
     pub created_at: chrono::NaiveDateTime,
 }
@@ -83,6 +84,7 @@ pub struct ExerciseSetWeightedQuery {
     pub name_id: i32,
     pub name: String,
     pub reps: i32,
+    pub reps_sum: i64,
     pub weight: f64,
     pub created_at: chrono::NaiveDateTime,
 }
@@ -95,6 +97,7 @@ pub struct ExerciseSetBodyweightQuery {
     pub name_id: i32,
     pub name: String,
     pub reps: i32,
+    pub reps_sum: i64,
     pub created_at: chrono::NaiveDateTime,
 }
 
@@ -198,6 +201,9 @@ impl TryFrom<ExerciseSetJoinQuery> for ExerciseSetBodyweightQuery {
         let reps = value
             .reps
             .ok_or(anyhow!("Malformed input. Field `reps` not present."))?;
+        let reps_sum = value
+            .reps_sum
+            .ok_or(anyhow!("Malformed input. Field `reps_sum` not present."))?;
 
         Ok(Self {
             id: value.id,
@@ -205,6 +211,7 @@ impl TryFrom<ExerciseSetJoinQuery> for ExerciseSetBodyweightQuery {
             name_id: value.name_id,
             name: value.name,
             reps,
+            reps_sum: reps_sum,
             created_at: value.created_at,
         })
     }
@@ -217,6 +224,9 @@ impl TryFrom<ExerciseSetJoinQuery> for ExerciseSetWeightedQuery {
         let reps = value
             .reps
             .ok_or(anyhow!("Malformed input. Field `reps` not present."))?;
+        let reps_sum = value
+            .reps_sum
+            .ok_or(anyhow!("Malformed input. Field `reps_sum` not present."))?;
         let weight = value
             .weight
             .ok_or(anyhow!("Malformed input. Field `weight` not present."))?;
@@ -227,6 +237,7 @@ impl TryFrom<ExerciseSetJoinQuery> for ExerciseSetWeightedQuery {
             name_id: value.name_id,
             name: value.name,
             reps,
+            reps_sum: reps_sum,
             weight,
             created_at: value.created_at,
         })
