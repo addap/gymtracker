@@ -60,8 +60,8 @@ pub fn HistoryPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
             .iter()
             .filter(|&exs| {
                 let name = exs.name().to_lowercase();
-                let search = (*search_term.current()).clone();
-                name.contains(&search)
+                let search = search_term.current();
+                name.contains(search.as_ref())
             });
         let hlist = filtered_history.map(|exs| {
             rsx! {

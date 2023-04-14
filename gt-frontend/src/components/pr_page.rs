@@ -42,8 +42,8 @@ pub fn PRPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
         Some(Some(prs)) => {
             let prlist_weighted = prs.weighted.iter().filter(|pr| {
                 let name = pr.name.to_lowercase();
-                let search = (*search_term.current()).clone();
-                name.contains(&search)
+                let search = search_term.current();
+                name.contains(search.as_ref())
             }).map(|pr| {
                 rsx! {
                     li { format!("{}: [ {} ]", pr.name.clone(), join(pr.pr.iter()
@@ -55,8 +55,8 @@ pub fn PRPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
                 .iter()
                 .filter(|pr| {
                     let name = pr.name.to_lowercase();
-                    let search = (*search_term.current()).clone();
-                    name.contains(&search)
+                    let search = search_term.current();
+                    name.contains(search.as_ref())
                 })
                 .map(|pr| {
                     rsx! {
