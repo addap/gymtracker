@@ -278,7 +278,7 @@ pub fn GraphPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let graph_data = use_state(&cx, || {
         Vec::<(String, String, models::ExerciseGraphQuery)>::new()
     });
-    // let search_term = use_state(&cx, || "".to_string());
+    let search_term = use_state(&cx, || "".to_string());
 
     let _fetch = use_future(&cx, (), |()| {
         to_owned![auth_token, graph_data];
@@ -323,16 +323,41 @@ pub fn GraphPage<'a>(cx: Scope<'a, MessageProps<'a>>) -> Element<'a> {
     let graphs = graph_data
         .get()
         .iter()
-        .map(|(canvas_id, canvas_wrapper_id, exg)| {
+        .map(|x| {
+            let name = x.2.name.to_lowercase();
+            let search = search_term.current();
+            (x, name.contains(search.as_ref()))
+        })
+        .map(|((canvas_id, canvas_wrapper_id, exg), flg_show)| {
             rsx! {
-                Graph {
-                    canvas_id: canvas_id,
-                    canvas_wrapper_id: canvas_wrapper_id,
-                    data: exg
+                div {
+                    display: if flg_show { "block" } else { "none" },
+                    Graph {
+                        canvas_id: canvas_id,
+                        canvas_wrapper_id: canvas_wrapper_id,
+                        data: exg
+                    }
                 }
             }
         });
+
     cx.render(rsx! {
-        graphs
+        div {
+            class: "my-3 p-2",
+            form {
+                class: "row g-1 g-sm-2",
+                div {
+                    class: "form-group col-12 col-sm",
+                    input {
+                        class: "form-control",
+                        value: "{ search_term }",
+                        placeholder: "Search",
+                        oninput: move |evt| { search_term.set(evt.value.to_lowercase()) }
+                    }
+                }
+            }
+            graphs
+        }
+
     })
 }
