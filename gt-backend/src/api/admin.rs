@@ -2,7 +2,7 @@ use axum::{extract::State, Extension, Json};
 use migration::Expr;
 use sea_orm::*;
 
-use crate::{AppError, AppState, Result};
+use crate::{db, AppError, AppState, Result};
 use gt_core::entities::{prelude::*, *};
 use gt_core::models;
 
@@ -46,4 +46,23 @@ pub async fn merge_names(
     let _res_delete = delete_name.delete(&state.conn).await?;
 
     Ok(Json(res_update.rows_affected))
+}
+
+pub async fn reset_password(
+    State(state): State<AppState>,
+    #[allow(unused_variables)] Extension(user): Extension<user_login::Model>,
+    Json(payload): Json<models::AdminResetPassword>,
+) -> Result<Json<()>> {
+    let new_pw_hash = db::user::hash_password(&payload.password)?;
+
+    let mut user_model: user_login::ActiveModel = UserLogin::find()
+        .filter(user_login::Column::Username.eq(payload.username))
+        .one(&state.conn)
+        .await?
+        .ok_or(AppError::ResourceNotFound)?
+        .into();
+    user_model.pw_hash = ActiveValue::Set(new_pw_hash);
+    user_model.update(&state.conn).await?;
+
+    Ok(Json(()))
 }

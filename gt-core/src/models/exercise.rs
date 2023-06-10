@@ -146,12 +146,6 @@ pub struct PRQuery {
     pub bodyweight: Vec<PRBodyweightQuery>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, From, PartialEq)]
-pub struct MergeNames {
-    pub to_delete: String,
-    pub to_expand: String,
-}
-
 impl ExerciseSetQuery {
     pub fn name(&self) -> &str {
         match self {

@@ -12,6 +12,15 @@ use crate::{AppError, Result};
 use gt_core::entities::{prelude::*, *};
 use gt_core::models;
 
+pub fn hash_password(password: &str) -> Result<String> {
+    let salt = SaltString::generate(&mut OsRng);
+    let pw_hash = Pbkdf2
+        .hash_password(password.as_bytes(), &salt)
+        .map_err(|e| AppError::StatusCode(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .to_string();
+    Ok(pw_hash)
+}
+
 pub async fn create_user(
     data: &models::UserSignup,
     is_superuser: bool,
@@ -26,11 +35,7 @@ pub async fn create_user(
     }
 
     // Hash password to PHC string ($pbkdf2-sha256$...)
-    let salt = SaltString::generate(&mut OsRng);
-    let pw_hash = Pbkdf2
-        .hash_password(data.password.as_bytes(), &salt)
-        .map_err(|e| AppError::StatusCode(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
-        .to_string();
+    let pw_hash = hash_password(&data.password)?;
 
     let new_user_login = user_login::ActiveModel {
         username: ActiveValue::Set(data.username.clone()),
