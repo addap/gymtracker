@@ -11,10 +11,10 @@ base64 = "0.21.0"
 chrono = "0.4.23"
 const_format = "0.2.30"
 derive_more = "0.99.17"
-dioxus = { version = "0.3.1" }
-dioxus-router = { version = "0.3.0", features = [ "web" ] }
-dioxus-web = "0.3.0"
-fermi = "0.3.0"
+dioxus = { version = "0.3" }
+dioxus-router = { version = "0.3", features = [ "web" ] }
+dioxus-web = "0.3"
+fermi = "0.3"
 futures-util = "0.3.26"
 gloo-file = "0.2.3"
 gloo-timers = "0.2.6"
