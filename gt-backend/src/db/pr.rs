@@ -23,7 +23,7 @@ pub async fn get_weighted_exercise_set_prs_for_user(
     log::info!("{}", q.build(DbBackend::Postgres).to_string());
 
     let res = q
-        .into_model::<models::ExerciseSetWeightedQuery>()
+        .into_model::<models::ExercisePrWeightedQuery>()
         .all(conn)
         .await?;
 
@@ -64,7 +64,7 @@ pub async fn get_bodyweight_exercise_set_prs_for_user(
     log::info!("{}", q.build(DbBackend::Postgres).to_string());
 
     let res = q
-        .into_model::<models::ExerciseSetBodyweightQuery>()
+        .into_model::<models::ExercisePrBodyweightQuery>()
         .all(conn)
         .await?;
 

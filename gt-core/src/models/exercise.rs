@@ -109,6 +109,29 @@ pub enum ExerciseSetQuery {
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[cfg_attr(not(target_arch = "wasm32"), derive(FromQueryResult))]
+pub struct ExercisePrWeightedQuery {
+    pub id: i32,
+    pub user_id: i32,
+    pub name_id: i32,
+    pub name: String,
+    pub reps: i32,
+    pub weight: f64,
+    pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[cfg_attr(not(target_arch = "wasm32"), derive(FromQueryResult))]
+pub struct ExercisePrBodyweightQuery {
+    pub id: i32,
+    pub user_id: i32,
+    pub name_id: i32,
+    pub name: String,
+    pub reps: i32,
+    pub created_at: chrono::NaiveDateTime,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[cfg_attr(not(target_arch = "wasm32"), derive(FromQueryResult))]
 pub struct ExerciseGraphJoinQuery {
     pub name: String,
     pub reps: i32,
